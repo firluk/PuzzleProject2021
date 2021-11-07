@@ -15,18 +15,18 @@ def plt_show_no_axis(img, title=""):
 # parameters of the puzzle and image size
 pieces = 60
 scale = 1 / 10
+desired_width = 2000
 
 # read image, resize and convert to rgb
-img = cv.imread("./img_dev/white_bg_crop2.jpg")
-resize = cv.resize(img, (round(img.shape[1] * scale), round(img.shape[0] * scale)))
+img = cv.imread("./img_dev/white_bg_crop_piece.jpg")
+scale = desired_width / img.shape[1]
+img = cv.resize(img, (round(img.shape[1] * scale), round(img.shape[0] * scale)))
 gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 gray = cv.blur(gray, (3, 3))
 
 # prepare for contour finding by thresholding the image
 thresh = cv.adaptiveThreshold(gray, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 11, 2)
 thresh = cv.blur(thresh, ksize=(5, 5))
-
-all_contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
 
 # filter out edge one contours
@@ -39,11 +39,6 @@ def acceptable_contour_area(contour, max_area):
     return cv2.contourArea(contour) < max_area
 
 
-all_contoured = cv.drawContours(np.zeros_like(img), all_contours, -1, (0, 255, 0), 3)
-all_contoured_on_blank = cv.drawContours(np.zeros_like(img), all_contours, -1, (0, 255, 0), 3)
-top_contours = [all_contours[i] for i in range(len(all_contours)) if hierarchy[0][i][3] == -1]
-top_contoured = cv.drawContours(np.zeros_like(img), top_contours, -1, (255, 0, 0), 3)
-plt_show_no_axis(thresh)
-plt_show_no_axis(gray)
-plt_show_no_axis(all_contoured)
-plt_show_no_axis(top_contoured)
+all_contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+indices = [i for i in range(len(all_contours)) if hierarchy[0][i][3] != -1]
+
