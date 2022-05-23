@@ -5,11 +5,17 @@ name = "pypi"
 
 [packages]
 numpy = "*"
-opencv-python = "*"
-pandas = "*"
 scipy = "*"
 matplotlib = "*"
 scikit-image = "*"
+tensorflow = "*"
+keras = "*"
+opencv-python = "*"
+h5py = "*"
+imgaug = "*"
+ipython = {extras = ["all"], version = "*"}
+Pillow = "*"
+Cython = "*"
 
 [dev-packages]
 
