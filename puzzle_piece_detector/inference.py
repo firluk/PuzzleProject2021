@@ -39,8 +39,7 @@ from warnings import filterwarnings
 import cv2 as cv
 import numpy as np
 import skimage
-
-from mrcnn.config import Config
+from puzzle_piece_detector.inference_config import InferenceConfig
 
 # Filter some deprecation warnings for cleaner output, safe to delete this line
 filterwarnings(action='ignore', category=DeprecationWarning, message='`np.bool` is a deprecated alias')
@@ -55,26 +54,6 @@ DEFAULT_OUTPUT_DIR = "./"
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
 from mrcnn import model as modellib
-
-
-# Configurations
-class InferenceConfig(Config):
-    # Give the configuration a recognizable name
-    NAME = "puzzle piece_piece_detector_inference_config"
-
-    # Number of classes (including background)
-    NUM_CLASSES = 1 + 1  # Background + puzzle piece
-
-    # Number of training steps per epoch
-    STEPS_PER_EPOCH = 100
-
-    # Skip detections with < 90% confidence
-    DETECTION_MIN_CONFIDENCE = 0.9
-
-    # Set batch size to 1 since we'll be running inference on
-    # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
-    GPU_COUNT = 1
-    IMAGES_PER_GPU = 1
 
 
 def color_splash(image, mask):
