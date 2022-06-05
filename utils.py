@@ -4,6 +4,7 @@ import os
 import numpy as np
 import skimage.draw
 import skimage.io
+from matplotlib import pyplot as plt
 
 
 def masks_from_via_region_data(via_region_data_json_path, filename):
@@ -29,6 +30,18 @@ def masks_from_via_region_data(via_region_data_json_path, filename):
         all_points_x = shape_attributes['all_points_x']
         all_points_y = shape_attributes['all_points_y']
         rr, cc = skimage.draw.polygon(all_points_y, all_points_x)
-        masks[rr, cc, i] = 1
+        masks[rr, cc, i] = 255
 
     return masks
+
+
+def plt_show_no_axis(img, title=""):
+    """
+    Plots the image using matlplotlib without axis.
+    :param img: array_like, shape (n, m) or (n, m, 3) or (n, m, 4)
+    :param title: to show above the plot
+    """
+    plt.axis('off')
+    plt.title(title)
+    plt.imshow(img)
+    plt.show()
