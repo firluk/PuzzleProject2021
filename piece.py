@@ -82,11 +82,13 @@ class Piece:
 
             for i in range(4):
                 strip_coordinates = contour_split[i]
+                facet = Facet(strip_coordinates)
                 # # visual debugging
-                from matplotlib import pyplot as plt
-                plt.imshow(cv.polylines(np.zeros_like(cropped_mask), [strip_coordinates], False, 255, 3))
-                plt.show()
-                lst.append(Facet(strip_coordinates))
+                # from matplotlib import pyplot as plt
+                # plt.imshow(cv.polylines(np.zeros_like(cropped_mask), [strip_coordinates], False, 255, 3))
+                # plt.title(facet.type.name)
+                # plt.show()
+                lst.append(facet)
 
             return lst
 
