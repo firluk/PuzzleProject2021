@@ -1,8 +1,10 @@
 import cv2 as cv
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import find_peaks, savgol_filter, peak_prominences
 
 from facet import Facet
+from utils import cart2pol
 
 SAVGOL_WINDOW_RATIO = 0.04
 
@@ -35,17 +37,6 @@ class Piece:
             """
             (center_x, center_y), _ = cv.minEnclosingCircle(contour)
 
-            def cart2pol(_x, _y):
-                """
-                Turns cartesian coordinates to polar
-                :param _x: x coordinate
-                :param _y: y coordinate
-                :return: (rho, phi): rho - length of the vector, phi - angle of the vector in radians
-                """
-                _rho = np.sqrt(_x ** 2 + _y ** 2)
-                _phi = np.arctan2(_y, _x)
-                return _rho, _phi
-
             x, y = contour[:, 0, 0], contour[:, 0, 1]
             rho, phi = cart2pol(x - center_x, y - center_y)
 
@@ -59,7 +50,7 @@ class Piece:
             smoothed_rho = savgol_filter(rho, window_length, 3)
             peaks, _ = find_peaks(smoothed_rho, height=0)
 
-            window_length = int(cv.arcLength(contour, True) * 0.01 / 2)
+            window_length = max(int(cv.arcLength(contour, True) * 0.01 / 2), 5)
             prominences = peak_prominences(smoothed_rho, peaks, window_length)[0]
 
             four_highest_prominence = np.argsort(prominences)[-4:]  # lowest 4
@@ -82,12 +73,7 @@ class Piece:
 
             for i in range(4):
                 strip_coordinates = contour_split[i]
-                facet = Facet(strip_coordinates)
-                # # visual debugging
-                # from matplotlib import pyplot as plt
-                # plt.imshow(cv.polylines(np.zeros_like(cropped_mask), [strip_coordinates], False, 255, 3))
-                # plt.title(facet.type.name)
-                # plt.show()
+                facet = Facet(strip_coordinates, self)
                 lst.append(facet)
 
             return lst
@@ -112,24 +98,26 @@ class Piece:
         pass
 
 
-def pieces_from_masks(masks, image_path):
-    image = cv.imread(image_path)
+def image_in_scale(image, scale):
+    height, width = image.shape[:2]
+    scaled_height, scaled_width = int(height * scale), int(width * scale)
+    scaled_image = cv.resize(image, (scaled_width, scaled_height), interpolation=cv.INTER_LINEAR)
+    return scaled_image
+
+
+def masks_in_scale(masks, scale):
+    masks_num = masks.shape[-1]
+    height, width = masks.shape[:2]
+    scaled_height, scaled_width = int(height * scale), int(width * scale)
+    scaled_masks = np.zeros((scaled_height, scaled_width, masks_num))
+    for i in range(masks_num):
+        mask = masks[:, :, i]
+        scaled_masks[:, :, i] = cv.resize(mask, (scaled_width, scaled_height), interpolation=cv.INTER_NEAREST)
+    return scaled_masks.astype('uint8')
+
+
+def pieces_from_masks(masks, image):
     pieces = list()
     for i in range(masks.shape[-1]):
         pieces.append(Piece(masks[:, :, i], image, i))
     return pieces
-
-
-# piece debugging
-def main():
-    from utils import masks_from_via_region_data
-    import os
-
-    via_region_data_json_path, filename = 'dataset/12pieces/val/via_region_data.json', 'front_white.jpg'
-    masks = masks_from_via_region_data(via_region_data_json_path, filename)
-    image_path = os.path.join(os.path.split(via_region_data_json_path)[0], filename)
-    pieces = pieces_from_masks(masks, image_path)
-
-
-if __name__ == '__main__':
-    main()

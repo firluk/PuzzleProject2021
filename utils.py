@@ -4,6 +4,7 @@ import os
 import numpy as np
 import skimage.draw
 import skimage.io
+import cv2 as cv
 from matplotlib import pyplot as plt
 
 
@@ -45,3 +46,53 @@ def plt_show_no_axis(img, title=""):
     plt.title(title)
     plt.imshow(img)
     plt.show()
+
+
+def cart2pol(x, y):
+    """
+    Turns cartesian coordinates to polar
+    :param x: x coordinate
+    :param y: y coordinate
+    :return: (rho, phi): rho - length of the vector, phi - angle of the vector in radians
+    """
+    rho = np.sqrt(x ** 2 + y ** 2)
+    phi = np.arctan2(y, x)
+    return rho, phi
+
+
+def pol2cart(rho, theta):
+    """
+    Turns polat coordinate to cartesian
+    :param rho: vector length
+    :param theta: angle
+    :return:
+    """
+    x = rho * np.cos(theta)
+    y = rho * np.sin(theta)
+    return x, y
+
+
+def rotate_contour(cnt, angle):
+    M = cv.moments(cnt)
+    cx = int(M['m10'] / M['m00'])
+    cy = int(M['m01'] / M['m00'])
+
+    cnt_norm = cnt - [cx, cy]
+
+    coordinates = cnt_norm[:, 0, :]
+    xs, ys = coordinates[:, 0], coordinates[:, 1]
+    thetas, rhos = cart2pol(xs, ys)
+
+    thetas = np.rad2deg(thetas)
+    thetas = (thetas + angle) % 360
+    thetas = np.deg2rad(thetas)
+
+    xs, ys = pol2cart(thetas, rhos)
+
+    cnt_norm[:, 0, 0] = xs
+    cnt_norm[:, 0, 1] = ys
+
+    cnt_rotated = cnt_norm + [cx, cy]
+    cnt_rotated = cnt_rotated.astype(np.int32)
+
+    return cnt_rotated
