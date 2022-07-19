@@ -35,7 +35,6 @@ def main():
     via_region_data_json_path, filename = 'dataset/12pieces/val/via_region_data.json', 'front_white.jpg'
     masks = utils.masks_from_via_region_data(via_region_data_json_path, filename)
     image_path = os.path.join(os.path.split(via_region_data_json_path)[0], filename)
-    pieces = pieces_from_masks(masks, image_path)
     image = cv.imread(image_path)
 
     scale = 0.1
@@ -46,15 +45,15 @@ def main():
 
     N = len(pieces)
     intersection_scores = np.zeros((N, N, 16))
-    # malanohbis_distances = np.zeros((N, N, 16))
-    # malanohbis_norm = 100
+    mahalanobis_distances = np.zeros((N, N, 16))
+    mahalanobis_norm = 100
     for p1i, piece1 in enumerate(pieces):
         for p2i, piece2 in enumerate(pieces):
             if piece1 != piece2:
                 for f1i, facet1 in enumerate(piece1.facets):
                     for f2i, facet2 in enumerate(piece2.facets):
                         intersection_scores[p1i, p2i, f1i * 4 + f2i] = Facet.intersection_score(facet1, facet2)
-                        # malanohbis_distances[p1i, p2i, f1i * 4 + f2i] = Facet.malanohbis_distance(facet1, facet2, malanohbis_norm)
+                        mahalanobis_distances[p1i, p2i, f1i * 4 + f2i] = Facet.mahalanobis_distance(facet1, facet2, mahalanobis_norm)
 
     print(intersection_scores)
     sorted_idx = np.flip(np.argsort(intersection_scores, axis=None))

@@ -78,10 +78,6 @@ class Piece:
 
             return lst
 
-        facets = create_facets()
-
-        center = np.mean(corners)
-
         # fields
         self.id = piece_id
         self.left = left
@@ -90,8 +86,8 @@ class Piece:
         self.cropped_image = cropped_image
         self.contour = contour
         self.corners = corners
-        self.center = center
-        self.facets = facets
+        self.center = np.mean(corners)
+        self.facets = create_facets()
 
     def rotate_piece(self, angle):
         # TODO
