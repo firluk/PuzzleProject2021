@@ -1,3 +1,5 @@
+from enum import Enum
+
 import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,7 +12,17 @@ SAVGOL_WINDOW_RATIO = 0.04
 
 
 class Piece:
-    def __init__(self, full_mask, image, piece_id):
+    class Type(Enum):
+        CORNER = 1
+        SIDE = 2
+        MIDDLE = 3
+
+    def __init__(self, full_mask, image):
+        """
+        Initializes Piece from boolean mask and reference RGB image
+        :param full_mask:
+        :param image:
+        """
         _, _, stats, _ = cv.connectedComponentsWithStats(full_mask)
         left = stats[1, cv.CC_STAT_LEFT]
         top = stats[1, cv.CC_STAT_TOP]
@@ -78,8 +90,21 @@ class Piece:
 
             return lst
 
+        def resolve_type():
+            flats = 0
+            for facet in self.facets:
+                if facet.type == Facet.Type.FLAT:
+                    flats = flats + 1
+            if flats == 2:
+                return Piece.Type.CORNER
+            elif flats == 1:
+                return Piece.Type.SIDE
+            elif flats == 0:
+                return Piece.Type.MIDDLE
+            else:
+                raise ValueError(f"There are {flats} flats somehow - the piece is not valid")
+
         # fields
-        self.id = piece_id
         self.left = left
         self.top = top
         self.cropped_mask = cropped_mask
@@ -88,10 +113,7 @@ class Piece:
         self.corners = corners
         self.center = np.mean(corners)
         self.facets = create_facets()
-
-    def rotate_piece(self, angle):
-        # TODO
-        pass
+        self.type = resolve_type()
 
 
 def image_in_scale(image, scale):
@@ -115,5 +137,5 @@ def masks_in_scale(masks, scale):
 def pieces_from_masks(masks, image):
     pieces = list()
     for i in range(masks.shape[-1]):
-        pieces.append(Piece(masks[:, :, i], image, i))
+        pieces.append(Piece(masks[:, :, i], image))
     return pieces

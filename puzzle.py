@@ -44,22 +44,39 @@ def main():
     pieces = pieces_from_masks(masks, image)
 
     N = len(pieces)
-    intersection_scores = np.zeros((N, N, 16))
-    mahalanobis_distances = np.zeros((N, N, 16))
-    mahalanobis_norm = 100
-    for p1i, piece1 in enumerate(pieces):
-        for p2i, piece2 in enumerate(pieces):
-            if piece1 != piece2:
-                for f1i, facet1 in enumerate(piece1.facets):
-                    for f2i, facet2 in enumerate(piece2.facets):
-                        intersection_scores[p1i, p2i, f1i * 4 + f2i] = Facet.intersection_score(facet1, facet2)
-                        mahalanobis_distances[p1i, p2i, f1i * 4 + f2i] = Facet.mahalanobis_distance(facet1, facet2, mahalanobis_norm)
+    O = 4
 
-    print(intersection_scores)
-    sorted_idx = np.flip(np.argsort(intersection_scores, axis=None))
-    idx_mask = np.take_along_axis(intersection_scores, sorted_idx, axis=None)
-    sorted_filtered_idx = sorted_idx[idx_mask]
-    print(sorted_filtered_idx)
+    iou = np.zeros((N, N, O, O))
+    mgc = np.zeros((N, N, O, O))
+    cmp = np.zeros((N, N, O, O))
+    P = 25
+    for p1i, p1idx in enumerate(pieces):
+        for p2i, p2idx in enumerate(pieces):
+            if p1i > p2i:
+                for f1i, facet1 in enumerate(p1idx.facets):
+                    for f2i, facet2 in enumerate(p2idx.facets):
+                        iou[p1i, p2i, f1i, f2i] = Facet.iou(facet1, facet2)
+                        mgc[p1i, p2i, f1i, f2i] = Facet.mgc(facet1, facet2, P)
+                        cmp[p1i, p2i, f1i, f2i] = Facet.compatibility(facet1, facet2, P)
+
+    # sort and filter in descending order
+    edges_by_mgc = sort_and_filter(N, O, 0, mgc)
+    edges_by_iou = sort_and_filter(N, O, 0, iou)
+    edges_by_cmp = sort_and_filter(N, O, 0, cmp)
+
+    for edge in edges_by_mgc:
+        p1idx = edge[0]
+        p2idx = edge[1]
+        f1 = edge[2]
+        f2 = edge[3]
+
+
+def sort_and_filter(N, O, filter_val, weights):
+    sort_idx = np.flip(np.argsort(weights, axis=None))  # descending order using flat
+    mask = weights.flat > filter_val  # filter mask
+    filtered_idx = sort_idx[mask[sort_idx]]  # cutting according to filter
+    edges = np.transpose(np.vstack(np.unravel_index(filtered_idx, (N, N, O, O))))  # get indices
+    return edges
 
 
 if __name__ == '__main__':
