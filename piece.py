@@ -17,7 +17,7 @@ class Piece:
         SIDE = 2
         MIDDLE = 3
 
-    def __init__(self, full_mask, image):
+    def __init__(self, full_mask, image, piece_id):
         """
         Initializes Piece from boolean mask and reference RGB image
         :param full_mask:
@@ -59,10 +59,11 @@ class Piece:
             rho, phi = np.append(np.roll(rho, -argmin_rho), rho[argmin_rho]), np.append(np.roll(phi, -argmin_rho),
                                                                                         phi[argmin_rho])
 
+
             smoothed_rho = savgol_filter(rho, window_length, 3)
             peaks, _ = find_peaks(smoothed_rho, height=0)
 
-            window_length = max(int(cv.arcLength(contour, True) * 0.01 / 2), 5)
+            window_length = max(int(cv.arcLength(contour, True) * 0.001), 5)
             prominences = peak_prominences(smoothed_rho, peaks, window_length)[0]
 
             four_highest_prominence = np.argsort(prominences)[-4:]  # lowest 4
@@ -72,10 +73,49 @@ class Piece:
                                              x.shape)  # correct back shift
             four_highest_prominence = np.sort(four_highest_prominence)  # sort ascending
 
-            four_four_highest_prominence_xy_coordinates = x[four_highest_prominence], y[four_highest_prominence]
-            return four_four_highest_prominence_xy_coordinates, four_highest_prominence
+            four_highest_prominence_xy_coordinates = x[four_highest_prominence], y[four_highest_prominence]
+            #
+            # def four_minimal_distance_dist():
+            #     from itertools import combinations
+            #     from bisect import insort
+            #     combs = combinations(peaks, 4)
+            #     norms = []
+            #     for i, comb in enumerate(combs):
+            #         pass
+            #
+            # four_minimal_distance_dist()
+
+
+            # four_highest_prominence = np.sort(four_highest_prominence)  # sort ascending
+            # four_highest_prominence = peaks[four_highest_prominence]  # contour indices
+            # four_highest_prominence = np.mod(four_highest_prominence + argmin_rho,
+            #                                  x.shape)  # correct back shift
+            # four_highest_prominence = np.sort(four_highest_prominence)  # sort ascending
+            #
+            # four_highest_prominence_xy_coordinates = x[four_highest_prominence], y[four_highest_prominence]
+
+            # plt.imshow(cropped_image)
+            # plt.show()
+            # plt.imshow(cropped_mask)
+            # plt.show()
+            # plt.plot(rho)
+            # plt.show()
+            # plt.plot(smoothed_rho)
+            # plt.show()
+            # plt.plot(prominences)
+            # plt.show()
+
+            image = np.zeros_like(cropped_mask)
+            for i in range(4):
+                image[four_highest_prominence_xy_coordinates[1][i], four_highest_prominence_xy_coordinates[0][i]] = 255
+
+            plt.imshow(image)
+            plt.show()
+
+            return four_highest_prominence_xy_coordinates, four_highest_prominence
 
         corners, corners_indices = retrieve_corners()
+        # plt.plot(corners[1], corners[0], marker='.', linestyle = 'None'); plt.show()
 
         def create_facets():
             lst = []  # list of Facet objects
@@ -85,7 +125,7 @@ class Piece:
 
             for i in range(4):
                 strip_coordinates = contour_split[i]
-                facet = Facet(strip_coordinates, self)
+                facet = Facet(strip_coordinates, self, i)
                 lst.append(facet)
 
             return lst
@@ -113,7 +153,16 @@ class Piece:
         self.corners = corners
         self.center = np.mean(corners)
         self.facets = create_facets()
+        img = np.zeros_like(cropped_image)
+        facet_colors = np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 255]]).astype(np.uint8)
+        for fi in range(len(self.facets)):
+            mask = self.facets[fi].facet_mask
+            img[mask, :] = facet_colors[fi, :]
+        plt.imshow(img)
+        plt.axis('off')
+        plt.show()
         self.type = resolve_type()
+        self.piece_id = piece_id
 
 
 def image_in_scale(image, scale):
@@ -124,6 +173,8 @@ def image_in_scale(image, scale):
 
 
 def masks_in_scale(masks, scale):
+    if scale == 1:
+        return masks
     masks_num = masks.shape[-1]
     height, width = masks.shape[:2]
     scaled_height, scaled_width = int(height * scale), int(width * scale)
@@ -137,5 +188,5 @@ def masks_in_scale(masks, scale):
 def pieces_from_masks(masks, image):
     pieces = list()
     for i in range(masks.shape[-1]):
-        pieces.append(Piece(masks[:, :, i], image))
+        pieces.append(Piece(masks[:, :, i], image, i))
     return pieces

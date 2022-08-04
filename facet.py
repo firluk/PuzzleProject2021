@@ -11,10 +11,12 @@ class Facet:
         TAB = 2
         BLANK = 3
 
-    def __init__(self, strip_coordinates, piece):
+    def __init__(self, strip_coordinates, piece, facet_id, next_facet=None, prev_facet=None):
         """
+        Constructor of Facet instance from given strip coordinates that are relative to the piece
         :param strip_coordinates: ndarray:(N,1,2) - np array of coordinates, relative to cropped image
         :param piece: Piece corresponding to Facet
+        :param facet_id: identifier of the facet in the context of piece facets
         """
 
         def determine_type():
@@ -44,7 +46,7 @@ class Facet:
             :return: binary mask of the strip
             """
             shape = (self.piece.cropped_mask.shape[0], self.piece.cropped_mask.shape[1])
-            mask = cv.polylines(np.zeros(shape), [self.strip_coordinates], False, 255, 1)
+            mask = cv.polylines(np.zeros(shape), [self.strip_coordinates], False, 255, 1).astype(np.bool_)
             return mask
 
         def facet_image():
@@ -53,7 +55,7 @@ class Facet:
             :return: RGB image with only contour strip visible
             """
             strip_mask = self.facet_mask
-            image = np.zeros_like(self.piece.cropped_image)
+            image = np.zeros_like(self.piece.cropped_image, dtype=np.uint8)
             image[np.where(strip_mask)] = self.piece.cropped_image[np.where(strip_mask)]
             return image
 
@@ -94,6 +96,7 @@ class Facet:
             else:
                 return contour[head_idx:tail_idx:-1, :]
 
+        self.facet_id = facet_id
         self.piece = piece
         self.strip_coordinates = strip_coordinates
         self.strip_coordinates_approx = cv.approxPolyDP(strip_coordinates, 0, False)
@@ -104,6 +107,8 @@ class Facet:
         self.strip_coordinates_2nd_level = calculate_strip_coordinate_2nd_level()
         self.strip_image_2nd_level = strip_image(self.strip_coordinates_2nd_level)
         self.type = determine_type()
+        self.next_facet = next_facet
+        self.prev_facet = prev_facet
 
     def calculate_aligned_bitmaps(self, other):
         xy = (np.squeeze(self.strip_coordinates_approx))
@@ -167,19 +172,19 @@ class Facet:
         union_sum = self.union_sum(other)
         return intersection_sum / union_sum
 
-    def mgc(self, other, P):
+    def mgc(self, other, length_for_comparison):
         """
         Mahalanobis Gradient Compatibility
         :param other: Facet to calculate mahalanobis gradient compatibility with
-        :param P: normalizing parameter, as facets can be of different sizes
+        :param length_for_comparison: normalizing parameter, as facets can be of different sizes
         :return: mgc value
         """
         if self.type is Facet.Type.FLAT or other.type is Facet.Type.FLAT:
-            return np.inf
+            return 0
         elif self.type == other.type:
-            return np.inf
+            return 0
 
-        dim = (1, P)
+        dim = (1, length_for_comparison)
 
         p1_rear = cv.resize(self.strip_image, dim).astype(np.int32)
         p1_rear2nd = cv.resize(self.strip_image_2nd_level, dim).astype(np.int32)
