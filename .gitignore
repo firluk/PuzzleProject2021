@@ -8,7 +8,6 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-.idea
 build/
 develop-eggs/
 dist/
@@ -128,6 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# ValV ignore
+.idea
 /via-3.0.11/
 /via-2.0.11/
 /dataset/
