@@ -3,8 +3,32 @@
 import json, os
 import numpy as np
 import cv2
-import cropPiece_prototype as cpp
+# import cropPiece_prototype as cpp
 import math, time
+import csv
+import re
+
+# file1=open("proto/nominal.csv")
+# file2=open("proto/temp.txt",'a')
+#
+# condition = False
+#
+# for line in file1:
+#
+#     if condition:
+#         ind = [i for i, n in enumerate(line) if n == ','][3]
+#         if line[ind+1] == '1':
+#             file2.write(line.replace(line, line[:ind+1] + '0' + line[ind + 2:]))
+#         else:
+#             file2.write(line.replace(line, line[:ind + 1] + '1' + line[ind + 2:]))
+#     else:
+#         file2.write(line)
+#     if line == "[Data]\n":
+#         condition = True
+#
+# file1.close()
+# file2.close()
+
 
 # annotations = json.load(open('img_src/via_hamburg_json.json'))
 # original image
@@ -166,50 +190,51 @@ import math, time
 
 # </editor-fold>
 
-# <editor-fold desc="join blocks">
+# # <editor-fold desc="join blocks">
+#
+# # BlockA, BlockB: np.arrays
+# # PieceA, PieceB: tuples
+#
+#
+# def joinBlocks(BlockA, BlockB, PieceA, PieceB):
+#
+#     BlkA = BlockA
+#     BlkB = BlockB
+#
+#     AL = PieceA[1]
+#     BL = PieceB[1]
+#     tmp = AL-BL
+#     if tmp < 0:
+#         BlkA = np.hstack((np.zeros((BlkA.shape[0],abs(tmp)), dtype=int),BlkA))
+#     elif tmp > 0:
+#         BlkB = np.hstack((np.zeros((BlkB.shape[0], abs(tmp)), dtype=int), BlkB))
+#     AR = BlockA.shape[1] - PieceA[1] - 1
+#     BR = BlockB.shape[1] - PieceB[1] - 1
+#     tmp = AR-BR
+#     if tmp < 0:
+#         BlkA = np.hstack((BlkA,np.zeros((BlkA.shape[0],abs(tmp)), dtype=int)))
+#     elif tmp > 0:
+#         BlkB = np.hstack((BlkB,np.zeros((BlkB.shape[0], abs(tmp)), dtype=int)))
+#     AT = PieceA[0]
+#     BT = PieceB[0]
+#     tmp = AT - BT
+#     if tmp < 0:
+#         BlkA = np.vstack((np.zeros((abs(tmp), BlkA.shape[1]), dtype=int), BlkA))
+#     elif tmp > 0:
+#         BlkB = np.vstack((np.zeros((abs(tmp), BlkB.shape[1]), dtype=int), BlkB))
+#     AB = BlockA.shape[0] - PieceA[0] - 1
+#     BB = BlockB.shape[0] - PieceB[0] - 1
+#     tmp = AB - BB
+#     if tmp < 0:
+#         BlkA = np.vstack((BlkA, np.zeros((abs(tmp), BlkA.shape[1]), dtype=int)))
+#     elif tmp > 0:
+#         BlkB = np.vstack((BlkB, np.zeros((abs(tmp), BlkB.shape[1]), dtype=int)))
+#
+#     return [BlkA, BlkB, BlkA+BlkB]
+#
+# # </editor-fold>
+#
+# A = np.array(([0,0,0],[0,0,1],[1,1,1]))
+# B = np.array(([1,0],[0,0],[0,0]))
+# [AA, BB, joinedBlock] = joinBlocks(A,B,(2,2),(0,0))
 
-# BlockA, BlockB: np.arrays
-# PieceA, PieceB: tuples
-
-
-def joinBlocks(BlockA, BlockB, PieceA, PieceB):
-
-    BlkA = BlockA
-    BlkB = BlockB
-
-    AL = PieceA[1]
-    BL = PieceB[1]
-    tmp = AL-BL
-    if tmp < 0:
-        BlkA = np.hstack((np.zeros((BlkA.shape[0],abs(tmp)), dtype=int),BlkA))
-    elif tmp > 0:
-        BlkB = np.hstack((np.zeros((BlkB.shape[0], abs(tmp)), dtype=int), BlkB))
-    AR = BlockA.shape[1] - PieceA[1] - 1
-    BR = BlockB.shape[1] - PieceB[1] - 1
-    tmp = AR-BR
-    if tmp < 0:
-        BlkA = np.hstack((BlkA,np.zeros((BlkA.shape[0],abs(tmp)), dtype=int)))
-    elif tmp > 0:
-        BlkB = np.hstack((BlkB,np.zeros((BlkB.shape[0], abs(tmp)), dtype=int)))
-    AT = PieceA[0]
-    BT = PieceB[0]
-    tmp = AT - BT
-    if tmp < 0:
-        BlkA = np.vstack((np.zeros((abs(tmp), BlkA.shape[1]), dtype=int), BlkA))
-    elif tmp > 0:
-        BlkB = np.vstack((np.zeros((abs(tmp), BlkB.shape[1]), dtype=int), BlkB))
-    AB = BlockA.shape[0] - PieceA[0] - 1
-    BB = BlockB.shape[0] - PieceB[0] - 1
-    tmp = AB - BB
-    if tmp < 0:
-        BlkA = np.vstack((BlkA, np.zeros((abs(tmp), BlkA.shape[1]), dtype=int)))
-    elif tmp > 0:
-        BlkB = np.vstack((BlkB, np.zeros((abs(tmp), BlkB.shape[1]), dtype=int)))
-
-    return [BlkA, BlkB, BlkA+BlkB]
-
-# </editor-fold>
-
-A = np.array(([0,0,0],[0,0,1],[1,1,1]))
-B = np.array(([1,0],[0,0],[0,0]))
-[AA, BB, joinedBlock] = joinBlocks(A,B,(2,2),(0,0))

@@ -6,7 +6,7 @@ import numpy as np
 import os
 from piece import Piece, pieces_from_masks, masks_in_scale, image_in_scale
 from facet import Facet
-from puzzle_piece_detector.inference_callable import Inference
+# from puzzle_piece_detector.inference_callable import Inference
 
 DEFAULT_WEIGHTS_PATH = './weights/mask_rcnn_puzzle.h5 '
 
@@ -31,8 +31,9 @@ def parse_args():
 def main():
     # weights_path, image_path = parse_args()
     weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale.jpg'
-    inference = Inference(weights_path)
-    masks = inference.infer_masks_and_watershed(image_path)
+    # inference = Inference(weights_path)
+    # masks = inference.infer_masks_and_watershed(image_path)
+    masks = np.load("masks.npy")
     # masks = inference.infer_masks(image_path)
     # masks = inference.infer_masks(image_path)
     # via_region_data_json_path, filename = 'dataset/12pieces/val/via_region_data.json', 'front_white.jpg'
