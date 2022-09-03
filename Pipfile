@@ -16,6 +16,8 @@ imgaug = "*"
 ipython = {extras = ["all"], version = "*"}
 Pillow = "*"
 Cython = "*"
+pyinstaller = '*'
+protobuf = "==3.20.*"
 
 [dev-packages]
 

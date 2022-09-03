@@ -4,4 +4,6 @@
 - Valentin Volovik
 - Vadim Golotsvan
 
-## Pull request
+## How to install
+
+pipenv install -r requirements.txt

@@ -36,18 +36,6 @@ def masks_from_via_region_data(via_region_data_json_path, filename):
     return masks
 
 
-def plt_show_no_axis(img, title=""):
-    """
-    Plots the image using matlplotlib without axis.
-    :param img: array_like, shape (n, m) or (n, m, 3) or (n, m, 4)
-    :param title: to show above the plot
-    """
-    plt.axis('off')
-    plt.title(title)
-    plt.imshow(img)
-    plt.show()
-
-
 def cart2pol(x, y):
     """
     Turns cartesian coordinates to polar
