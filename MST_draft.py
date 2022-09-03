@@ -6,6 +6,7 @@ from collections import defaultdict
 
 # Class to represent a graph
 import numpy as np
+import Block_draft as bd
 
 
 class Graph:
@@ -25,13 +26,20 @@ class Graph:
 
     # A function that does union of two sets of x and y
     # (uses union by rank)
-    def union(self, parent, rank, x, y):
+    def union(self, parent, rank, x, y, i, blocks):
         xroot = self.find(parent, x)
         yroot = self.find(parent, y)
 
         # Attach smaller rank tree under root of
         # high rank tree (Union by Rank)
         if rank[xroot] < rank[yroot]:
+            # TODO: fix block indecies!!!
+            block = bd.joinBlocks(blocks[xroot], blocks[yroot], self.graph[i][0], self.graph[i][2], self.graph[i][1],
+                          self.graph[i][3])
+            if block is False:
+                return block
+            else:
+                blocks[xroot] = block
             parent[xroot] = yroot
         elif rank[xroot] > rank[yroot]:
             parent[yroot] = xroot
@@ -47,8 +55,7 @@ class Graph:
         while (validationMat[self.graph[i][0]][self.graph[i][2]] != 0) and \
                 (validationMat[self.graph[i][1]][self.graph[i][3]] != 0):
             i = i + 1
-        return self.graph[i]
-
+        return i, self.graph[i]
 
     # The main function to construct MST using Kruskal's
     # algorithm
@@ -66,18 +73,22 @@ class Graph:
         parent = []
         rank = []
         validation_mat = np.zeros((self.V, 4), dtype=int)
+        blocks = []
 
         # Create V subsets with single elements
         for node in range(self.V):
             parent.append(node)
             rank.append(0)
+            blocks.append(bd.Block(node))   # create blocks of single piece each TODO: complete the code
 
         # Number of edges to be taken is equal to V-1
         while e < self.V - 1:
 
             # Step 2: Pick the smallest edge and increment
             # the index for next iteration
-            p1, p2, fp1, fp2 = self.validateEdge(i, validation_mat)
+            i, [p1, p2, fp1, fp2] = self.validateEdge(i, validation_mat)     # returns edge with 2 available facets
+
+
             x = self.find(parent, p1)
             y = self.find(parent, p2)
 
@@ -86,25 +97,33 @@ class Graph:
             # and increment the indexof result
             # for next edge
             if x != y:
-                e = e + 1
-                result.append([p1, p2, fp1, fp2])
-                validation_mat[p1][fp1] = 1
-                validation_mat[p2][fp2] = 1
-                self.union(parent, rank, x, y)
+                print("alive")
+                # return list of edges involved indirectly in the block or empty list
+                if self.union(parent, rank, x, y, i, blocks) is not False:
+                    e = e + 1
+                    result.append([p1, p2, fp1, fp2])
+                    validation_mat[p1][fp1] = 1
+                    validation_mat[p2][fp2] = 1
+
+            i = i + 1
         # Else discard the edge
 
         # minimumCost = 0
         # print("Edges in the constructed MST")
         for p1, p2, _, _ in result:
-        #     minimumCost += weight
+            #     minimumCost += weight
             print("%d -- %d" % (p1, p2))
+        print(parent)
         # print("Minimum Spanning Tree", minimumCost)
+
 
 # Driver code
 
-edges = [[0,1,2,2],[0,2,2,0],[2,3,1,3],[1,2,3,0],
-         [1,3,2,0],[2,3,0,0],[0,3,1,0],[0,1,1,3]]
-g = Graph(4,edges)
+edges = [[0, 1, 2, 2], [0, 2, 2, 0], [2, 3, 1, 3], [1, 2, 3, 0],
+         [1, 3, 2, 0], [2, 3, 0, 0], [0, 3, 1, 0], [0, 1, 1, 3],
+         [4, 5, 1, 1], [3, 4, 2, 2]]
+# [4, 5, 1, 1], [3, 4, 2, 2]
+g = Graph(6, edges)
 
 # Function call
 g.KruskalMST()
