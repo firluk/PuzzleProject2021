@@ -107,115 +107,138 @@ class Facet:
         self.strip_coordinates_2nd_level = calculate_strip_coordinate_2nd_level()
         self.strip_image_2nd_level = strip_image(self.strip_coordinates_2nd_level)
         self.type = determine_type()
-        self.next_facet = next_facet
-        self.prev_facet = prev_facet
+        self.next_facet: Facet = next_facet
+        self.prev_facet: Facet = prev_facet
 
     def calculate_aligned_bitmaps(self, other):
-        xy = (np.squeeze(self.strip_coordinates_approx))
-        xy_ht_diff = xy[-1] - xy[0]
-        length = np.sqrt(xy_ht_diff[0] ** 2 + xy_ht_diff[1] ** 2)
-        other_xy = (np.squeeze(other.strip_coordinates_approx))
-        other_xy_ht_diff = other_xy[-1] - other_xy[0]
-        other_length = np.sqrt(other_xy_ht_diff[0] ** 2 + other_xy_ht_diff[1] ** 2)
+        blank, tab = self.assign_blank_and_tab(other)
+
+        tab_xy = (np.squeeze(tab.strip_coordinates_approx))
+        tab_xy_ht_diff = tab_xy[-1] - tab_xy[0]
+        tab_length = np.sqrt(tab_xy_ht_diff[0] ** 2 + tab_xy_ht_diff[1] ** 2)
+
+        blank_xy = (np.squeeze(blank.strip_coordinates_approx))
+        blank_xy_ht_diff = blank_xy[-1] - blank_xy[0]
+        blank_length = np.sqrt(blank_xy_ht_diff[0] ** 2 + blank_xy_ht_diff[1] ** 2)
+
         length_pad = 3
         shape_pad = 3
-        max_length = np.ceil(max(length, other_length)).astype(np.int32) + length_pad
+        max_length = np.ceil(max(tab_length, blank_length)).astype(np.int32) + length_pad
         shape = (2 * max_length + shape_pad, 2 * max_length + shape_pad)
         color = 1
 
-        aligned_xy = align_along_x(xy)
-        aligned_xy[:, 1] = aligned_xy[:, 1] + max_length
-        aligned_xy = aligned_xy.astype(np.int32)
-        aligned_facet_bitmap = cv.drawContours(np.zeros(shape), [aligned_xy], -1, color, cv.FILLED)
+        aligned_tab_xy = align_along_x(tab_xy)
+        aligned_tab_xy[:, 1] = aligned_tab_xy[:, 1] + max_length
+        aligned_tab_xy = aligned_tab_xy.astype(np.int32)
+        aligned_tab_xy = shift_to_top(aligned_tab_xy)
+        aligned_tab_facet_bitmap = cv.fillPoly(np.zeros(shape), [aligned_tab_xy], color)
+        # aligned_tab_facet_bitmap = cv.drawContours(np.zeros(shape), [aligned_tab_xy], -1, color, cv.FILLED)
 
-        other_aligned_xy = align_along_x(other_xy)
-        other_aligned_xy[:, 1] = other_aligned_xy[:, 1] * -1
-        other_aligned_xy[:, 0] = np.max(other_aligned_xy[:, 0]) - other_aligned_xy[:, 0]
-        other_aligned_xy[:, 1] = other_aligned_xy[:, 1] + max_length
-        other_aligned_xy = other_aligned_xy.astype(np.int32)
-        other_aligned_facet_bitmap = cv.drawContours(np.zeros(shape), [other_aligned_xy], -1, color, cv.FILLED)
+        aligned_blank_xy = align_along_x(blank_xy)
+        aligned_blank_xy[:, 1] = aligned_blank_xy[:, 1] * -1
+        aligned_blank_xy[:, 0] = np.max(aligned_blank_xy[:, 0]) - aligned_blank_xy[:, 0]
+        aligned_blank_xy[:, 1] = aligned_blank_xy[:, 1] + max_length
+        aligned_blank_xy = aligned_blank_xy.astype(np.int32)
+        aligned_blank_xy = shift_to_top(aligned_blank_xy)
+        aligned_blank_facet_bitmap = cv.fillPoly(np.zeros(shape), [aligned_blank_xy], color)
+        # aligned_blank_facet_bitmap = cv.drawContours(np.zeros(shape), [aligned_blank_xy], -1, color, cv.FILLED)
+        return aligned_tab_facet_bitmap, aligned_blank_facet_bitmap
 
-        return aligned_facet_bitmap, other_aligned_facet_bitmap
-
-    def intersection_sum(self, other):
+    def verify_facets_snappable(self, other) -> bool:
         if self.type is Facet.Type.FLAT or other.type is Facet.Type.FLAT:
-            return 0
+            return False
         elif self.type == other.type:
+            return False
+        elif (self.next_facet.type is Facet.Type.FLAT and other.prev_facet.type is not Facet.Type.FLAT) or \
+                (self.prev_facet.type is Facet.Type.FLAT and other.next_facet.type is not Facet.Type.FLAT):
+            return False
+        else:
+            return True
+
+    def intersection_sum(self, other) -> int:
+        if not self.verify_facets_snappable(other):
             return 0
 
-        aligned_facet_bitmap, other_aligned_facet_bitmap = self.calculate_aligned_bitmaps(other)
-        intersection = np.logical_and(aligned_facet_bitmap, other_aligned_facet_bitmap)
-        return np.sum(intersection)
+        aligned_tab_facet_bitmap, aligned_blank_facet_bitmap = self.calculate_aligned_bitmaps(other)
+        intersection = np.logical_and(aligned_tab_facet_bitmap, aligned_blank_facet_bitmap)
+        return int(np.sum(intersection))
 
-    def union_sum(self, other):
-        if self.type is Facet.Type.FLAT or other.type is Facet.Type.FLAT:
-            return 0
-        elif self.type == other.type:
+    def union_sum(self, other) -> int:
+        if not self.verify_facets_snappable(other):
             return 0
 
         aligned_facet_bitmap, other_aligned_facet_bitmap = self.calculate_aligned_bitmaps(other)
         union = np.logical_or(aligned_facet_bitmap, other_aligned_facet_bitmap)
-        return np.sum(union)
+        return int(np.sum(union))
 
-    def iou(self, other):
+    def assign_blank_and_tab(self, other):
+        if self.type == Facet.Type.BLANK and other.type == Facet.Type.TAB:
+            return self, other
+        elif other.type == Facet.Type.BLANK and self.type == Facet.Type.TAB:
+            return other, self
+
+    def iou(self, other) -> float:
         """
         IOU - Maximizes similarity
         :param other: Facet to calculate iou with
         :return: value between 0 and 1, 1 meaning identity of Facets
         """
-        if self.type is Facet.Type.FLAT or other.type is Facet.Type.FLAT:
-            return 0
-        elif self.type == other.type:
+        if not self.verify_facets_snappable(other):
             return 0
 
         intersection_sum = self.intersection_sum(other)
         union_sum = self.union_sum(other)
         return intersection_sum / union_sum
 
-    def mgc(self, other, length_for_comparison):
+    def mgc(self, other, length_for_comparison) -> float:
         """
         Mahalanobis Gradient Compatibility
         :param other: Facet to calculate mahalanobis gradient compatibility with
         :param length_for_comparison: normalizing parameter, as facets can be of different sizes
         :return: mgc value
         """
-        if self.type is Facet.Type.FLAT or other.type is Facet.Type.FLAT:
+        if not self.verify_facets_snappable(other):
             return 0
-        elif self.type == other.type:
+
+        if self.type == Facet.Type.TAB and other.type == Facet.Type.BLANK:
+            tab, blank = self, other
+        elif self.type == Facet.Type.BLANK and other.type == Facet.Type.TAB:
+            blank, tab = self, other
+        else:
             return 0
 
         dim = (1, length_for_comparison)
 
-        p1_rear = cv.resize(self.strip_image, dim).astype(np.int32)
-        p1_rear2nd = cv.resize(self.strip_image_2nd_level, dim).astype(np.int32)
-        gr_p1 = np.abs(p1_rear - p1_rear2nd)
-        gr_p1_mean = np.mean(gr_p1, axis=0, keepdims=True)
+        tab_rear = cv.resize(tab.strip_image, dim).astype(np.int32)
+        tab_rear2nd = cv.resize(tab.strip_image_2nd_level, dim).astype(np.int32)
+        tab_gr = np.abs(tab_rear - tab_rear2nd)
+        tab_gr_mean = np.mean(tab_gr, axis=0, keepdims=True)
 
-        p2_rear = cv.resize(other.strip_image, dim).astype(np.int32)
-        p2_rear2nd = cv.resize(other.strip_image_2nd_level, dim).astype(np.int32)
-        gr_p2 = np.flipud(np.abs(p2_rear - p2_rear2nd))
-        gr_p2_mean = np.mean(gr_p2, axis=0, keepdims=True)
+        blank_rear = cv.resize(blank.strip_image, dim).astype(np.int32)
+        blank_rear2nd = cv.resize(blank.strip_image_2nd_level, dim).astype(np.int32)
+        blank_gr = np.flipud(np.abs(blank_rear - blank_rear2nd))
+        blank_gr_mean = np.mean(blank_gr, axis=0, keepdims=True)
 
-        gr_p1p2 = (np.abs(p1_rear - p2_rear))
+        tab_blank_gr = (np.abs(tab_gr_mean - blank_rear))
 
-        p1_cov = np.cov(np.squeeze(gr_p1.T))
-        p2_cov = np.cov(np.squeeze(gr_p2.T))
+        tab_cov = np.cov(np.squeeze(tab_gr.T))
+        blank_cov = np.cov(np.squeeze(blank_gr.T))
 
-        p1_cov_inv = np.linalg.inv(p1_cov)
-        p2_cov_inv = np.linalg.inv(p2_cov)
+        tab_cov_inv = np.linalg.inv(tab_cov)
+        blank_cov_inv = np.linalg.inv(blank_cov)
 
-        gr1_diff = np.squeeze(abs(gr_p1p2 - gr_p1_mean))
-        gr2_diff = np.squeeze(abs(gr_p1p2 - gr_p2_mean))
+        gr1_diff = np.squeeze(abs(tab_blank_gr - tab_gr_mean))
+        gr2_diff = np.squeeze(abs(tab_blank_gr - blank_gr_mean))
 
-        mahalanobis_distp1p2 = \
-            np.sqrt(np.sum(gr1_diff @ p1_cov_inv @ gr1_diff.T))
+        mahalanobis_dist_tab_blank = \
+            np.sqrt(np.sum(gr1_diff @ tab_cov_inv @ gr1_diff.T))
 
-        mahalanobis_distp2p1 = \
-            np.sqrt(np.sum(gr2_diff @ p2_cov_inv @ gr2_diff.T))
+        mahalanobis_dist_blank_tab = \
+            np.sqrt(np.sum(gr2_diff @ blank_cov_inv @ gr2_diff.T))
 
-        return mahalanobis_distp1p2 + mahalanobis_distp2p1
+        return mahalanobis_dist_tab_blank + mahalanobis_dist_blank_tab
 
-    def compatibility(self, other, P):
+    def compatibility(self, other, P) -> float:
         """
         :param other: Facet to calculate scaled compatibility with
         :param P: normalizing parameter, as facets can be of different sizes
@@ -227,5 +250,9 @@ class Facet:
 def align_along_x(xy):
     theta = np.arctan2(xy[-1, 1] - xy[0, 1], xy[-1, 0] - xy[0, 0])
     c, s = np.cos(theta), np.sin(theta)
-    rotation_mat = np.array([[c, -s], [s, c]])
+    rotation_mat = np.array([[c, -s],
+                             [s, c]])
     return (xy - xy[0, :]) @ rotation_mat
+
+def shift_to_top(xy):
+    return xy - (0, np.min(xy[:, 1]))

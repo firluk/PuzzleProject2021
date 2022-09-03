@@ -6,7 +6,7 @@ import numpy as np
 import os
 from piece import Piece, pieces_from_masks, masks_in_scale, image_in_scale
 from facet import Facet
-# from puzzle_piece_detector.inference_callable import Inference
+from puzzle_piece_detector.inference_callable import Inference
 
 DEFAULT_WEIGHTS_PATH = './weights/mask_rcnn_puzzle.h5 '
 
@@ -30,10 +30,13 @@ def parse_args():
 
 def main():
     # weights_path, image_path = parse_args()
-    weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale.jpg'
-    # inference = Inference(weights_path)
-    # masks = inference.infer_masks_and_watershed(image_path)
-    masks = np.load("masks.npy")
+    # weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale.jpg'
+    weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale_3_pieces_corner_side_mid.jpg'
+    # weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale_4_tab_3_tab_1_blank.jpg'
+    # weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale_4_tab.jpg'  # single piece
+    inference = Inference(weights_path)
+    masks = inference.infer_masks_and_watershed(image_path)
+    # masks = np.load("masks.npy")
     # masks = inference.infer_masks(image_path)
     # masks = inference.infer_masks(image_path)
     # via_region_data_json_path, filename = 'dataset/12pieces/val/via_region_data.json', 'front_white.jpg'
@@ -46,6 +49,14 @@ def main():
     image = image_in_scale(image, scale)
 
     pieces = pieces_from_masks(masks, image)
+
+    piece = pieces[1]
+    piece.facets
+
+    # n_flats
+    # n_inners
+    # n_total
+
     print_pieces(pieces)
     print_facets(pieces)
 
@@ -56,14 +67,19 @@ def main():
     mgc = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
     cmp = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
     length_for_comparison = 25
-    for p1i, p1idx in enumerate(pieces):
-        for p2i, p2idx in enumerate(pieces):
-            if p1i > p2i:
-                for f1i, facet1 in enumerate(p1idx.facets):
-                    for f2i, facet2 in enumerate(p2idx.facets):
-                        iou[p1i, p2i, f1i, f2i] = Facet.iou(facet1, facet2)
-                        mgc[p1i, p2i, f1i, f2i] = Facet.mgc(facet1, facet2, length_for_comparison)
-                        cmp[p1i, p2i, f1i, f2i] = Facet.compatibility(facet1, facet2, length_for_comparison)
+
+    for p1idx, p1 in enumerate(pieces):
+        for p2idx, p2 in enumerate(pieces):
+            if p1idx < p2idx:
+                for f1idx, f1 in enumerate(p1.facets):
+                    if f1.type is Facet.Type.FLAT:
+                        continue
+                    for f2idx, f2 in enumerate(p2.facets):
+                        if f2.type is Facet.Type.FLAT:
+                            continue
+                        iou[p1idx, p2idx, f1idx, f2idx] = Facet.iou(f1, f2)
+                        # mgc[p1idx, p2idx, f1idx, f2idx] = Facet.mgc(f1, f2, length_for_comparison)
+                        # cmp[p1idx, p2idx, f1idx, f2idx] = Facet.compatibility(f1, f2, length_for_comparison)
 
     # sort and filter in descending order
     edges_by_mgc = sort_and_filter(n_pieces, n_facets, 0, mgc, descending=True)
@@ -138,7 +154,7 @@ def sort_and_filter(n_pieces, n_facets, filter_val, weights, descending=True):
     sort_idx = np.argsort(weights, axis=None)
     if descending:
         sort_idx = np.flip(sort_idx)  # descending order using flat
-    mask = weights.flat > filter_val  # filter mask
+    mask = weights.flat > filter_val  # filter mask,
     filtered_idx = sort_idx[mask[sort_idx]]  # cutting according to filter
     # get indices
     edges = np.transpose(np.vstack(np.unravel_index(filtered_idx, (n_pieces, n_pieces, n_facets, n_facets))))

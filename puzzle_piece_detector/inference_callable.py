@@ -131,7 +131,8 @@ class Inference:
         vals = np.unique(markers)
         masks = np.zeros_like(masks, dtype=np.uint8)
 
-        ksize_in_relation_to_width = int(stats[1, cv.CC_STAT_WIDTH] * 0.10) | 1
+        # ksize_in_relation_to_width = int(stats[1, cv.CC_STAT_WIDTH] * 0.10) | 1
+        ksize_in_relation_to_width = int(stats[1, cv.CC_STAT_WIDTH] * 0.05) | 1
 
         for i, val in enumerate(vals[vals > 1]):
             mask = masks[:, :, i]

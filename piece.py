@@ -56,69 +56,119 @@ class Piece:
             window_length = len(rho) * SAVGOL_WINDOW_RATIO
             window_length = np.ceil(window_length) // 2 * 2 + 1  # closest odd
             window_length = window_length.astype(int)
-            rho, phi = np.append(np.roll(rho, -argmin_rho), rho[argmin_rho]), np.append(np.roll(phi, -argmin_rho),
-                                                                                        phi[argmin_rho])
-
+            rho, phi = (np.append(np.roll(rho, -argmin_rho), rho[argmin_rho]),
+                        np.append(np.roll(phi, -argmin_rho), phi[argmin_rho]))
 
             smoothed_rho = savgol_filter(rho, window_length, 3)
             peaks, _ = find_peaks(smoothed_rho, height=0)
 
-            window_length = max(int(cv.arcLength(contour, True) * 0.001), 5)
-            prominences = peak_prominences(smoothed_rho, peaks, window_length)[0]
+            # window_length = max(int(cv.arcLength(contour, True) * 0.001), 5)
+            # prominences = peak_prominences(smoothed_rho, peaks, window_length)[0]
 
-            four_highest_prominence = np.argsort(prominences)[-4:]  # lowest 4
-            four_highest_prominence = np.sort(four_highest_prominence)  # sort ascending
-            four_highest_prominence = peaks[four_highest_prominence]  # contour indices
-            four_highest_prominence = np.mod(four_highest_prominence + argmin_rho,
-                                             x.shape)  # correct back shift
-            four_highest_prominence = np.sort(four_highest_prominence)  # sort ascending
-
-            four_highest_prominence_xy_coordinates = x[four_highest_prominence], y[four_highest_prominence]
+            # idx = np.argsort(prominences)[-4:]  # lowest 4
+            # idx = np.sort(idx)  # sort ascending
+            # idx = peaks[idx]  # contour indices
+            # idx = np.mod(idx + argmin_rho, x.shape)  # correct back shift
+            # idx = np.sort(idx)  # sort ascending
             #
-            # def four_minimal_distance_dist():
-            #     from itertools import combinations
-            #     from bisect import insort
-            #     combs = combinations(peaks, 4)
-            #     norms = []
-            #     for i, comb in enumerate(combs):
-            #         pass
-            #
-            # four_minimal_distance_dist()
+            # xy = x[idx], y[idx]
 
+            from itertools import combinations
 
-            # four_highest_prominence = np.sort(four_highest_prominence)  # sort ascending
-            # four_highest_prominence = peaks[four_highest_prominence]  # contour indices
-            # four_highest_prominence = np.mod(four_highest_prominence + argmin_rho,
-            #                                  x.shape)  # correct back shift
-            # four_highest_prominence = np.sort(four_highest_prominence)  # sort ascending
-            #
-            # four_highest_prominence_xy_coordinates = x[four_highest_prominence], y[four_highest_prominence]
+            def angle_between(p1, p2):
+                ang1 = np.arctan2(*p1[::-1])
+                ang2 = np.arctan2(*p2[::-1])
+                return np.rad2deg((ang1 - ang2) % (2 * np.pi))
 
-            # plt.imshow(cropped_image)
-            # plt.show()
-            # plt.imshow(cropped_mask)
-            # plt.show()
-            # plt.plot(rho)
-            # plt.show()
-            # plt.plot(smoothed_rho)
-            # plt.show()
-            # plt.plot(prominences)
-            # plt.show()
+            peaks = np.mod(peaks + argmin_rho, x.shape)  # correct back shift
+            peaks = np.sort(peaks)  # sort ascending
 
-            image = np.zeros_like(cropped_mask)
+            min_comb_tuple = (np.inf, -1)
+            min_comb_2nd_tuple = (np.inf, -1)
+            for comb in (combinations(peaks, 4)):
+                idx = np.array(comb)
+                b = np.array((x[idx], y[idx]))
+                a = np.roll(b, -1, axis=1)
+                c = np.roll(b, 1, axis=1)
+                ba = a - b
+                bc = c - b
+                angles = angle_between(ba, bc)
+                angles_sum_of_squares = np.sum(np.power(angles - 90, 2))
+                #
+                # poly_ctr = [np.asarray(contour[np.asarray(comb)])]
+                # poly = cv.fillPoly(np.zeros_like(cropped_mask), poly_ctr, 1)
+                # plt.imshow(poly)
+                # plt.title(f'{angles},{angles_sum_of_squares}')
+                # plt.show()
+
+                if angles_sum_of_squares < min_comb_tuple[0]:
+                    min_comb_2nd_tuple = min_comb_tuple
+                    min_comb_tuple = (angles_sum_of_squares, comb)
+                elif angles_sum_of_squares < min_comb_2nd_tuple[0]:
+                    min_comb_2nd_tuple = (angles_sum_of_squares, comb)
+
+            if min_comb_2nd_tuple[0] < np.inf:
+                # check whether this is a case of 4 tabs, by looking at negated rho values
+                #
+                # peaks, _ = find_peaks(-smoothed_rho, height=0)
+                # plt.plot(-smoothed_rho)
+                # plt.show()
+                # plt.close()
+                #
+                # corners_indices = min_comb_tuple[1]
+                # contour_split = np.split(contour, corners_indices)
+                # contour_split[0] = np.vstack((contour_split[-1], contour_split[0]))
+
+                # poly_ctr = [np.asarray(contour[np.asarray(min_comb_tuple[1])])]
+                # poly = cv.fillPoly(np.zeros_like(cropped_mask), poly_ctr, 1)
+                # plt.imshow(poly)
+                # plt.show()
+                # plt.close()
+                #
+                # poly_ctr = [np.asarray(contour[np.asarray(min_comb_2nd_tuple[1])])]
+                # poly = cv.fillPoly(np.zeros_like(cropped_mask), poly_ctr, 1)
+                # plt.imshow(poly)
+                # plt.show()
+                # plt.close()
+
+                comb = np.asarray(min_comb_tuple[1])
+                idx = np.array(comb)
+                b = np.array((x[idx], y[idx]))
+                a = np.roll(b, -1, axis=1)
+                norms = np.linalg.norm(a - b, axis=0)
+
+                comb = np.asarray(min_comb_2nd_tuple[1])
+                idx = np.array(comb)
+                b = np.array((x[idx], y[idx]))
+                a = np.roll(b, -1, axis=1)
+                norms_2nd = np.linalg.norm(a - b, axis=0)
+
+                min_max_norm_comb = min_comb_tuple[1] if np.max(norms) <= np.max(norms_2nd) else min_comb_2nd_tuple[1]
+
+                idx = np.asarray(min_max_norm_comb)
+            else:
+                idx = np.asarray(min_comb_tuple[1])
+
+            xy = x[idx], y[idx]
+
+            _image = np.zeros_like(cropped_mask)
             for i in range(4):
-                image[four_highest_prominence_xy_coordinates[1][i], four_highest_prominence_xy_coordinates[0][i]] = 255
+                _image[xy[1][i], xy[0][i]] = 255
 
-            plt.imshow(image)
-            plt.show()
+            # plt.imshow(image)
+            # plt.show()
+            # plt.close()
 
-            return four_highest_prominence_xy_coordinates, four_highest_prominence
+            return xy, idx
 
         corners, corners_indices = retrieve_corners()
-        # plt.plot(corners[1], corners[0], marker='.', linestyle = 'None'); plt.show()
+
+        # plt.plot(corners[1], corners[0], marker='.', linestyle = 'None')
+        # plt.show()
+        # plt.close()
 
         def create_facets():
-            lst = []  # list of Facet objects
+            facets = []  # list of Facet objects
 
             contour_split = np.split(contour, corners_indices)
             contour_split[0] = np.vstack((contour_split[-1], contour_split[0]))
@@ -126,9 +176,15 @@ class Piece:
             for i in range(4):
                 strip_coordinates = contour_split[i]
                 facet = Facet(strip_coordinates, self, i)
-                lst.append(facet)
+                facets.append(facet)
 
-            return lst
+            for i in range(4):
+                prev_i = (i - 1) % 4
+                next_i = (i + 1) % 4
+                facets[i].prev_facet = facets[prev_i]
+                facets[i].next_facet = facets[next_i]
+
+            return facets
 
         def resolve_type():
             flats = 0
@@ -153,14 +209,15 @@ class Piece:
         self.corners = corners
         self.center = np.mean(corners)
         self.facets = create_facets()
-        img = np.zeros_like(cropped_image)
-        facet_colors = np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 255]]).astype(np.uint8)
-        for fi in range(len(self.facets)):
-            mask = self.facets[fi].facet_mask
-            img[mask, :] = facet_colors[fi, :]
-        plt.imshow(img)
-        plt.axis('off')
-        plt.show()
+        # img = np.zeros_like(cropped_image)
+        # facet_colors = np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 255]]).astype(np.uint8)
+        # for fi in range(len(self.facets)):
+        #     mask = self.facets[fi].facet_mask
+        #     img[mask, :] = facet_colors[fi, :]
+        # plt.imshow(img)
+        # plt.axis('off')
+        # plt.show()
+        # plt.close()
         self.type = resolve_type()
         self.piece_id = piece_id
 
