@@ -1,9 +1,7 @@
 import matplotlib.pyplot as plt
 
-import utils
 import cv2 as cv
 import numpy as np
-import os
 from piece import Piece, pieces_from_masks, masks_in_scale, image_in_scale
 from facet import Facet
 from puzzle_piece_detector.inference_callable import Inference
@@ -50,18 +48,13 @@ def main():
 
     pieces = pieces_from_masks(masks, image)
 
-    piece = pieces[1]
-    piece.facets
-
-    # n_flats
-    # n_inners
-    # n_total
+    n_side_pieces = sum(1 for piece in pieces if piece.Type == Piece.Type.SIDE)
+    n_middle_pieces = sum(1 for piece in pieces if piece.Type == Piece.Type.MIDDLE)
+    n_pieces = len(pieces)
+    n_facets = 4
 
     print_pieces(pieces)
     print_facets(pieces)
-
-    n_pieces = len(pieces)
-    n_facets = 4
 
     iou = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
     mgc = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
