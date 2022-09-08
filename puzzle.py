@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from facet import Facet
+from mst_solver import MST_Solver
 from piece import Piece, pieces_from_masks, masks_in_scale, image_in_scale
 from puzzle_piece_detector.inference_callable import Inference
 
@@ -174,7 +175,8 @@ def main():
     edges_by_cmp = sort_and_filter(n_pieces, n_facets, 0, cmp, descending=True)
     # print_figures_with_weights_to_folder(edges_by_mgc, mgc, pieces, 'mgc')
     # print_figures_with_weights_to_folder(edges_by_iou, iou, pieces, 'iou')
-    # TODO add the MST solver solution here
+    # TODO: user selects edges type
+    solution = MST_Solver(6, edges_by_iou).solveMST()
 
 
 if __name__ == '__main__':
