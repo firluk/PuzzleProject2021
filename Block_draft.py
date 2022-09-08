@@ -72,20 +72,6 @@ def rotateBlockBeforeJoin(block, fp, fp_up, side):
     return block
 
 
-def validateMatch(score_mat, cell_a, cell_b):
-    # score_mat is either IoU, Mahalanobis or CMP
-    if cell_b.piece_ind >= cell_a.piece_ind:
-        if score_mat[cell_a.piece_ind][cell_b.piece_ind][cell_a.facet_piece_ind][cell_b.facet_piece_ind] == 0:
-            return False
-        else:
-            return True
-    else:
-        if score_mat[cell_b.piece_ind][cell_a.piece_ind][cell_b.facet_piece_ind][cell_a.facet_piece_ind] == 0:
-            return False
-        else:
-            return True
-
-
 def joinBlocks(block_a, block_b, p_a, fp_a, p_b, fp_b, score_mat):
     # in: indices of pieces and facets connected by valid edge
     # directions right/left/above/below are relative to block_a
@@ -137,50 +123,50 @@ def joinBlocks(block_a, block_b, p_a, fp_a, p_b, fp_b, score_mat):
         block_b_rotated = np.vstack((block_b_rotated, np.empty((abs(diff), block_b_rotated.shape[1]), cellInBlock)))
 
     joined_block = np.empty(block_a_rotated.shape, cellInBlock)
-    used_edge_stack = []
+    for i, (cell_a, cell_b) in enumerate(zip(block_a_rotated.flatten(), block_b_rotated.flatten())):
+        if cell_a is None and cell_b is not None:
+            joined_block[i] = cell_b
+        elif cell_a is not None and cell_b is None:
+            joined_block[i] = cell_a
+        elif cell_a is not None and cell_b is not None:
+            return False
 
-    # for i, (cell_a, cell_b) in enumerate(zip(block_a_rotated.flatten(), block_b_rotated.flatten())):
-    #     if cell_a is None and cell_b is not None:
-    #         joined_block[i] = cell_b
-    #     elif cell_a is not None and cell_b is None:
-    #         joined_block[i] = cell_a
-    #     elif cell_a is not None and cell_b is not None:
-    #         return False
-
+    # TODO: integrate overlap lines 126-132 in the below
     for i, (row_a, row_b) in enumerate(zip(block_a_rotated, block_b_rotated)):
         for j, (cell_a, cell_b) in enumerate(zip(row_a, row_b)):
-            if cell_a is not None and cell_b is not None:
-                return False
-            elif j < block_a_rotated.shape[1]:
-                if cell_a is not None and block_b_rotated[i][j + 1] is not None:
-                    if validateMatch(score_mat, cell_a, block_b_rotated[i][j + 1]) is False:
+            if cell_a is not None and row_b[j + 1] is not None:
+                if row_b[j + 1].piece_ind >= cell_a.piece_ind:
+                    if score_mat[cell_a.piece_ind][row_b[j + 1].piece_ind][cell_a.facet_piece_ind][row_b[j + 1].facet_piece_ind] == 0: # TODO: combine score_mat, add edge to stack of used
                         return False
-                    else:
-                        used_edge_stack.append(cell_a.piece_ind, block_b_rotated[i][j + 1].piece_ind,
-                                               cell_a.facet_piece_ind, block_b_rotated[i][j + 1].facet_piece_ind)
-                elif cell_b is not None and block_a_rotated[i][j + 1] is not None:
-                    if validateMatch(score_mat, cell_b, block_a_rotated[i][j + 1]) is False:
+                else:
+                    if score_mat[row_b[j + 1].piece_ind][cell_a.piece_ind][row_b[j + 1].facet_piece_ind][cell_a.facet_piece_ind] == 0: # TODO: combine score_mat
                         return False
-                    else:
-                        used_edge_stack.append(cell_b.piece_ind, block_a_rotated[i][j + 1].piece_ind,
-                                               cell_b.facet_piece_ind, block_a_rotated[i][j + 1].facet_piece_ind)
-            elif i < block_a_rotated.shape[0]:
-                if cell_a is not None and block_b_rotated[i + 1][j] is not None:
-                    if validateMatch(score_mat, cell_a, block_b_rotated[i + 1][j]) is False:
+            elif cell_b is not None and row_a[j + 1] is not None:
+                if row_a[j + 1].piece_ind >= cell_b.piece_ind:
+                    if score_mat[cell_b.piece_ind][row_a[j + 1].piece_ind][cell_b.facet_piece_ind][row_a[j + 1].facet_piece_ind] == 0: # TODO: combine score_mat
                         return False
-                    else:
-                        used_edge_stack.append(cell_a.piece_ind, block_b_rotated[i + 1][j].piece_ind,
-                                               cell_a.facet_piece_ind, block_b_rotated[i + 1][j].facet_piece_ind)
-                elif cell_b is not None and block_a_rotated[i + 1][j] is not None:
-                    if validateMatch(score_mat, cell_a, block_a_rotated[i + 1][j]) is False:
+                else:
+                    if score_mat[row_a[j + 1].piece_ind][cell_b.piece_ind][row_a[j + 1].facet_piece_ind][cell_b.facet_piece_ind] == 0: # TODO: combine score_mat
                         return False
-                    else:
-                        used_edge_stack.append(cell_b.piece_ind, block_a_rotated[i + 1][j].piece_ind,
-                                               cell_b.facet_piece_ind, block_a_rotated[i + 1][j].facet_piece_ind)
-            elif cell_a is None and cell_b is not None:
-                joined_block[i][j] = cell_b
-            elif cell_a is not None and cell_b is None:
-                joined_block[i][j] = cell_a
-    # TODO: maybe a global list of used edges so it can be updated with temporary used_edge_stack?
+            elif cell_a is not None and row_b[j + 1] is not None:
+                if row_b[j + 1].piece_ind >= cell_a.piece_ind:
+                    if score_mat[cell_a.piece_ind][row_b[j + 1].piece_ind][cell_a.facet_piece_ind][row_b[j + 1].facet_piece_ind] == 0: # TODO: combine score_mat
+                        return False
+                else:
+                    if score_mat[row_b[j + 1].piece_ind][cell_a.piece_ind][row_b[j + 1].facet_piece_ind][cell_a.facet_piece_ind] == 0: # TODO: combine score_mat
+                        return False
+            elif cell_b is not None and row_a[j + 1] is not None:
+                if row_a[j + 1].piece_ind >= cell_b.piece_ind:
+                    if score_mat[cell_b.piece_ind][row_a[j + 1].piece_ind][cell_b.facet_piece_ind][row_a[j + 1].facet_piece_ind] == 0: # TODO: combine score_mat
+                        return False
+                else:
+                    if score_mat[row_a[j + 1].piece_ind][cell_b.piece_ind][row_a[j + 1].facet_piece_ind][cell_b.facet_piece_ind] == 0: # TODO: combine score_mat
+                        return False
+            # if cell_a is None and cell_b is not None:
+            #     joined_block[i][j] = cell_b
+            # elif cell_a is not None and cell_b is None:
+            #     joined_block[i][j] = cell_a
+            # elif cell_a is not None and cell_b is not None:
+            #     return False
 
-    return joined_block, used_edge_stack
+    return joined_block.reshape(block_a.shape)
