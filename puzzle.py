@@ -27,8 +27,14 @@ def parse_args():
 
 
 def evaluate_edge_compatibility(pieces):
-    n_side_pieces = sum(1 for piece in pieces if piece.Type == Piece.Type.SIDE)
-    n_middle_pieces = sum(1 for piece in pieces if piece.Type == Piece.Type.MIDDLE)
+    n_side_pieces = n_middle_pieces = n_corner_pieces = 0
+    for piece in pieces:
+        if piece.Type is Piece.Type.SIDE:
+            n_side_pieces = n_side_pieces + 1
+        elif piece.Type is Piece.Type.MIDDLE:
+            n_middle_pieces = n_middle_pieces + 1
+        else:
+            n_corner_pieces = n_corner_pieces + 1
     n_pieces = len(pieces)
     n_facets = 4
     # print_pieces(pieces)
