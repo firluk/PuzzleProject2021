@@ -166,7 +166,7 @@ def paint_facets_according_to_type(masks, pieces):
 
 
 def main():
-    pieces = segment_to_masks_and_extract_pieces('./weights/mask_rcnn_puzzle.h5', './plots/full_downscale_3_pieces_corner_side_mid.jpg')
+    pieces = segment_to_masks_and_extract_pieces('./weights/mask_rcnn_puzzle.h5', './plots/full_downscale.png')
     cmp, iou, mgc, n_facets, n_pieces, n_side_pieces, n_middle_pieces = evaluate_edge_compatibility(pieces)
     # sort and filter in descending order
     edges_by_mgc = sort_and_filter(n_pieces, n_facets, 0, mgc, descending=True)
