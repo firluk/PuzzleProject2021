@@ -30,7 +30,6 @@ Usage:
 
 """
 
-import datetime
 import json
 import os
 import sys
@@ -39,6 +38,7 @@ from warnings import filterwarnings
 import cv2 as cv
 import numpy as np
 import skimage
+
 from puzzle_piece_detector.inference_config import InferenceConfig
 
 # Filter some deprecation warnings for cleaner output, safe to delete this line

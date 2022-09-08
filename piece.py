@@ -1,9 +1,8 @@
 from enum import Enum
 
 import cv2 as cv
-import matplotlib.pyplot as plt
 import numpy as np
-from scipy.signal import find_peaks, savgol_filter, peak_prominences
+from scipy.signal import find_peaks, savgol_filter
 
 from facet import Facet
 from utils import cart2pol

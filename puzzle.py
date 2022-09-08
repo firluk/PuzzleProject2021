@@ -1,11 +1,9 @@
-import matplotlib.pyplot as plt
-
-import utils
 import cv2 as cv
+import matplotlib.pyplot as plt
 import numpy as np
-import os
-from piece import Piece, pieces_from_masks, masks_in_scale, image_in_scale
+
 from facet import Facet
+from piece import Piece, pieces_from_masks, masks_in_scale, image_in_scale
 from puzzle_piece_detector.inference_callable import Inference
 
 DEFAULT_WEIGHTS_PATH = './weights/mask_rcnn_puzzle.h5 '
@@ -28,46 +26,17 @@ def parse_args():
     return args.weights, args.image
 
 
-def main():
-    # weights_path, image_path = parse_args()
-    # weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale.jpg'
-    weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale_3_pieces_corner_side_mid.jpg'
-    # weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale_4_tab_3_tab_1_blank.jpg'
-    # weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale_4_tab.jpg'  # single piece
-    inference = Inference(weights_path)
-    masks = inference.infer_masks_and_watershed(image_path)
-    # masks = np.load("masks.npy")
-    # masks = inference.infer_masks(image_path)
-    # masks = inference.infer_masks(image_path)
-    # via_region_data_json_path, filename = 'dataset/12pieces/val/via_region_data.json', 'front_white.jpg'
-    # masks = utils.masks_from_via_region_data(via_region_data_json_path, filename)
-    # image_path = os.path.join(os.path.split(via_region_data_json_path)[0], filename)
-
-    image = cv.imread(image_path)
-    scale = 1
-    masks = masks_in_scale(masks, scale)
-    image = image_in_scale(image, scale)
-
-    pieces = pieces_from_masks(masks, image)
-
-    piece = pieces[1]
-    piece.facets
-
-    # n_flats
-    # n_inners
-    # n_total
-
-    print_pieces(pieces)
-    print_facets(pieces)
-
+def evaluate_edge_compatibility(pieces):
+    n_side_pieces = sum(1 for piece in pieces if piece.Type == Piece.Type.SIDE)
+    n_middle_pieces = sum(1 for piece in pieces if piece.Type == Piece.Type.MIDDLE)
     n_pieces = len(pieces)
     n_facets = 4
-
+    # print_pieces(pieces)
+    # print_facets(pieces)
     iou = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
     mgc = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
     cmp = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
     length_for_comparison = 25
-
     for p1idx, p1 in enumerate(pieces):
         for p2idx, p2 in enumerate(pieces):
             if p1idx < p2idx:
@@ -78,21 +47,26 @@ def main():
                         if f2.type is Facet.Type.FLAT:
                             continue
                         iou[p1idx, p2idx, f1idx, f2idx] = Facet.iou(f1, f2)
-                        # mgc[p1idx, p2idx, f1idx, f2idx] = Facet.mgc(f1, f2, length_for_comparison)
-                        # cmp[p1idx, p2idx, f1idx, f2idx] = Facet.compatibility(f1, f2, length_for_comparison)
+                        mgc[p1idx, p2idx, f1idx, f2idx] = Facet.mgc(f1, f2, length_for_comparison)
+                        cmp[p1idx, p2idx, f1idx, f2idx] = Facet.compatibility(f1, f2, length_for_comparison)
+                        # cmp[p1idx, p2idx, f1idx, f2idx] = compatibility_func()(mgc[p1idx, p2idx, f1idx, f2idx],
+                        #                                                        iou[p1idx, p2idx, f1idx, f2idx])
+    return cmp, iou, mgc, n_facets, n_pieces, n_side_pieces, n_middle_pieces
 
-    # sort and filter in descending order
-    edges_by_mgc = sort_and_filter(n_pieces, n_facets, 0, mgc, descending=True)
-    edges_by_iou = sort_and_filter(n_pieces, n_facets, 0, iou, descending=False)
-    edges_by_cmp = sort_and_filter(n_pieces, n_facets, 0, cmp, descending=True)
 
-    print_figures_with_weights(edges_by_mgc, mgc, pieces, 'mgc')
-    print_figures_with_weights(edges_by_iou, iou, pieces, 'iou')
+def segment_to_masks_and_extract_pieces(weights_path, image_path):
+    inference = Inference(weights_path)
+    masks = inference.infer_masks_and_watershed(image_path)
+    image = cv.imread(image_path)
+    scale = 1
+    masks = masks_in_scale(masks, scale)
+    image = image_in_scale(image, scale)
+    pieces = pieces_from_masks(masks, image)
+    return pieces
 
 
 def print_pieces(pieces):
     fig = plt.figure()
-
     for i in range(len(pieces)):
         factor = int(np.ceil(np.sqrt(len(pieces))))
         ax = fig.add_subplot(factor, factor, i + 1)
@@ -121,27 +95,21 @@ def print_facets(pieces):
     plt.close(fig)
 
 
-def print_figures_with_weights(edges, arr, pieces, output_dir):
+def print_figures_with_weights_to_folder(edges, arr, pieces, output_dir):
     for edge in edges:
-        p1 = edge[0]
-        p2 = edge[1]
-        f1 = edge[2]
-        f2 = edge[3]
+        p1, p2, f1, f2 = edge[0], edge[1], edge[2], edge[3]
 
         fig = plt.figure()
 
         ax = fig.add_subplot(2, 2, 1)
         plt.imshow(pieces[p1].cropped_image)
         ax.set_title(f'{p1}')
-
         ax = fig.add_subplot(2, 2, 2)
         plt.imshow(pieces[p2].cropped_image)
         ax.set_title(f'{p2}')
-
         ax = fig.add_subplot(2, 2, 3)
         plt.imshow(pieces[p1].facets[f1].facet_mask)
         ax.set_title(f'{f1}')
-
         ax = fig.add_subplot(2, 2, 4)
         plt.imshow(pieces[p2].facets[f2].facet_mask)
         ax.set_title(f'{f2}')
@@ -159,6 +127,54 @@ def sort_and_filter(n_pieces, n_facets, filter_val, weights, descending=True):
     # get indices
     edges = np.transpose(np.vstack(np.unravel_index(filtered_idx, (n_pieces, n_pieces, n_facets, n_facets))))
     return edges
+
+
+def paint_facets_to_distinct(masks, pieces):
+    width, height, _ = masks.shape
+    masks_with_facets = np.ones((width, height, 3), dtype=np.uint8) * 255
+    for piece in pieces:
+        img = np.ones_like(piece.cropped_image) * 255
+        facet_colors = dict()
+        facet_colors[Facet.Type.FLAT] = np.array([0, 0, 0], dtype=np.uint8)
+        facet_colors[Facet.Type.TAB] = np.array([0, 255, 0], dtype=np.uint8)
+        facet_colors[Facet.Type.BLANK] = np.array([255, 0, 0], dtype=np.uint8)
+        for fi in range(len(piece.facets)):
+            facet = piece.facets[fi]
+            mask = facet.facet_mask
+            img[mask, :] = facet_colors[facet.type]
+        height, width, _ = piece.cropped_image.shape
+        left, top = piece.left, piece.top
+        left_width, top_height = left + width, top + height
+        masks_with_facets[top:top_height, left:left_width] = img
+    return masks_with_facets
+
+
+def paint_facets_according_to_type(masks, pieces):
+    width, height, _ = masks.shape
+    masks_with_facets = np.ones((width, height, 3), dtype=np.uint8) * 255
+    for piece in pieces:
+        img = np.ones_like(piece.cropped_image) * 255
+        facet_colors = np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 0, 0]]).astype(np.uint8)
+        for fi in range(len(piece.facets)):
+            mask = piece.facets[fi].facet_mask
+            img[mask, :] = facet_colors[fi, :]
+        height, width, _ = piece.cropped_image.shape
+        left, top = piece.left, piece.top
+        left_width, top_height = left + width, top + height
+        masks_with_facets[top:top_height, left:left_width] = img
+    return masks_with_facets
+
+
+def main():
+    pieces = segment_to_masks_and_extract_pieces('./weights/mask_rcnn_puzzle.h5', './plots/full_downscale_3_pieces_corner_side_mid.jpg')
+    cmp, iou, mgc, n_facets, n_pieces, n_side_pieces, n_middle_pieces = evaluate_edge_compatibility(pieces)
+    # sort and filter in descending order
+    edges_by_mgc = sort_and_filter(n_pieces, n_facets, 0, mgc, descending=True)
+    edges_by_iou = sort_and_filter(n_pieces, n_facets, 0, iou, descending=False)
+    edges_by_cmp = sort_and_filter(n_pieces, n_facets, 0, cmp, descending=True)
+    # print_figures_with_weights_to_folder(edges_by_mgc, mgc, pieces, 'mgc')
+    # print_figures_with_weights_to_folder(edges_by_iou, iou, pieces, 'iou')
+    # TODO add the MST solver solution here
 
 
 if __name__ == '__main__':
