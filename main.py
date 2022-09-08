@@ -1,5 +1,5 @@
 from mst_solver import MST_Solver
-from puzzle import segment_to_masks_and_extract_pieces, evaluate_edge_compatibility, sort_and_filter
+from puzzle import *
 
 
 def main():
@@ -10,6 +10,10 @@ def main():
     edges_by_iou = sort_and_filter(n_pieces, n_facets, 0, iou, descending=False)
     edges_by_cmp = sort_and_filter(n_pieces, n_facets, 0, cmp, descending=True)
     # print_figures_with_weights_to_folder(edges_by_mgc, mgc, pieces, 'mgc')
-    # print_figures_with_weights_to_folder(edges_by_iou, iou, pieces, 'iou')
+    print_figures_with_weights_to_folder(edges_by_iou, iou, pieces, 'iou')
     # TODO: user selects edges type
     solution = MST_Solver(6, edges_by_iou).solveMST()
+
+
+if __name__ == '__main__':
+    main()
