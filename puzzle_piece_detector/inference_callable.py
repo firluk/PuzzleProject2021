@@ -36,9 +36,8 @@ from warnings import filterwarnings
 
 import cv2
 import cv2 as cv
-import matplotlib.pyplot as plt
-import skimage
 import numpy as np
+import skimage
 
 from puzzle_piece_detector.inference_config import InferenceConfig
 

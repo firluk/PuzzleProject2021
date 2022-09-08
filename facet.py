@@ -1,7 +1,6 @@
 from enum import Enum
 
 import cv2 as cv
-import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -247,12 +246,17 @@ class Facet:
         return self.mgc(other, P) * (1 - self.iou(other))
 
 
+def compatibility_func():
+    return lambda mgc_val, iou_val: mgc_val * (1 - iou_val)
+
+
 def align_along_x(xy):
     theta = np.arctan2(xy[-1, 1] - xy[0, 1], xy[-1, 0] - xy[0, 0])
     c, s = np.cos(theta), np.sin(theta)
     rotation_mat = np.array([[c, -s],
                              [s, c]])
     return (xy - xy[0, :]) @ rotation_mat
+
 
 def shift_to_top(xy):
     return xy - (0, np.min(xy[:, 1]))

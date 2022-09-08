@@ -1,11 +1,10 @@
 import json
 import os
 
+import cv2 as cv
 import numpy as np
 import skimage.draw
 import skimage.io
-import cv2 as cv
-from matplotlib import pyplot as plt
 
 
 def masks_from_via_region_data(via_region_data_json_path, filename):

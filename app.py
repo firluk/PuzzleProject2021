@@ -6,8 +6,8 @@ import cv2 as cv
 import numpy as np
 from PIL import ImageTk, Image
 
-from facet import Facet
 from piece import masks_in_scale, image_in_scale, pieces_from_masks
+from puzzle import paint_facets_to_distinct, paint_facets_according_to_type
 from puzzle_piece_detector.inference_callable import Inference
 
 
@@ -111,21 +111,7 @@ class Application(Frame):
         pieces = pieces_from_masks(masks, image)
         self.pieces = pieces
 
-        width, height, _ = masks.shape
-        masks_with_facets = np.ones((width, height, 3), dtype=np.uint8) * 255
-
-        for piece in pieces:
-            img = np.ones_like(piece.cropped_image) * 255
-            facet_colors = np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 0, 0]]).astype(np.uint8)
-            for fi in range(len(piece.facets)):
-                mask = piece.facets[fi].facet_mask
-                img[mask, :] = facet_colors[fi, :]
-            # width, height, _ = piece.cropped_image.shape
-            height, width, _ = piece.cropped_image.shape
-            left, top = piece.left, piece.top
-            left_width, top_height = left + width, top + height
-            # masks_with_facets[left:left_width, top:top_height] = img
-            masks_with_facets[top:top_height, left:left_width] = img
+        masks_with_facets = paint_facets_according_to_type(masks, pieces)
 
         # from matplotlib import pyplot as plt; plt.imshow(masks_with_facets); plt.show(); plt.close()
         self.update_photoImage_using_np_array(masks_with_facets)
@@ -137,25 +123,7 @@ class Application(Frame):
 
         pieces = self.pieces
         masks = self.masks
-        width, height, _ = masks.shape
-        masks_with_facets = np.ones((width, height, 3), dtype=np.uint8) * 255
-
-        for piece in pieces:
-            img = np.ones_like(piece.cropped_image) * 255
-            facet_colors = dict()
-            facet_colors[Facet.Type.FLAT] = np.array([0, 0, 0], dtype=np.uint8)
-            facet_colors[Facet.Type.TAB] = np.array([0, 255, 0], dtype=np.uint8)
-            facet_colors[Facet.Type.BLANK] = np.array([255, 0, 0], dtype=np.uint8)
-            for fi in range(len(piece.facets)):
-                facet = piece.facets[fi]
-                mask = facet.facet_mask
-                img[mask, :] = facet_colors[facet.type]
-            # width, height, _ = piece.cropped_image.shape
-            height, width, _ = piece.cropped_image.shape
-            left, top = piece.left, piece.top
-            left_width, top_height = left + width, top + height
-            # masks_with_facets[left:left_width, top:top_height] = img
-            masks_with_facets[top:top_height, left:left_width] = img
+        masks_with_facets = paint_facets_to_distinct(masks, pieces)
 
         self.update_photoImage_using_np_array(masks_with_facets)
         pass
