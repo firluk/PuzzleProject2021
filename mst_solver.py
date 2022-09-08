@@ -9,7 +9,7 @@ import numpy as np
 import block as bd
 
 
-class Graph:
+class MST_Solver:
 
     def __init__(self, numOfPieces, edges):
         # TODO: asc or desc order of the final scoring system?
@@ -88,7 +88,7 @@ class Graph:
                 # The main function to construct MST using Kruskal's
     # algorithm
 
-    def KruskalMST(self):
+    def solveMST(self):
 
         result = []  # This will store the resultant MST
 
@@ -155,7 +155,7 @@ edges = [[0, 1, 2, 2], [0, 2, 2, 0], [2, 3, 1, 3], [1, 2, 3, 0],
          [1, 3, 2, 0], [2, 3, 0, 0], [0, 3, 1, 0], [0, 1, 1, 3],
          [4, 5, 1, 1], [3, 4, 2, 2]]
 # [4, 5, 1, 1], [3, 4, 2, 2]
-g = Graph(6, edges)
+g = MST_Solver(6, edges)
 
 # n_facets = 4
 # n_pieces = 24
@@ -163,6 +163,6 @@ g = Graph(6, edges)
 # n_middle_pieces = 8
 
 # Function call
-g.KruskalMST()
+g.solveMST()
 
 # This code is contributed by Neelam Yadav
