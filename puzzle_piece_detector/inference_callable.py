@@ -87,7 +87,23 @@ class Inference:
         image = skimage.io.imread(image_path)
         # Detect objects
         r = self.model.detect([image], verbose=1)[0]
-        masks = r['masks'].astype(np.uint8) * 1
+        masks = r['masks'].astype(np.uint8) * 255
+
+        return masks.astype(np.bool_) if as_bool else masks
+
+    def infer_masks_and_blur(self, image_path, as_bool=False):
+        """
+        Detect objects in image, using given model and blur using median blur, returns binary bitmap masks
+        :param as_bool: flag return values be boolean
+        :param image_path: path to RGB image [height, width, 3]
+        :return: np boolean array [height, width, N], N - number of detected instances
+        """
+        # Run model detection and generate the color splash effect
+        print(f"Running on {image_path}")
+        image = skimage.io.imread(image_path)
+        # Detect objects
+        r = self.model.detect([image], verbose=1)[0]
+        masks = r['masks'].astype(np.uint8) * 255
 
         _, _, stats, _ = cv.connectedComponentsWithStats(masks[:, :, 0])
 
@@ -99,8 +115,8 @@ class Inference:
 
         return masks.astype(np.bool_) if as_bool else masks
 
-    def infer_masks_and_watershed(self, image_path, as_bool=False):
-        masks = self.infer_masks(image_path)
+    def infer_masks_watershed_and_blur(self, image_path, as_bool=False):
+        masks = self.infer_masks_and_blur(image_path)
         inferred_thresh = np.sum(masks, axis=2, keepdims=True).astype(np.uint8)
         kernel = np.ones((3, 3), np.uint8)
         inferred_thresh = cv.morphologyEx(inferred_thresh, cv.MORPH_ERODE, kernel, iterations=2)
@@ -148,7 +164,7 @@ class Inference:
         :param image_path: RGB image [height, width, 3]
         :return: {list: N}{tuple: 1}('np.uint8' (C, 1, 2)), N - masks, C - coords
         """
-        masks = self.infer_masks(image_path)
+        masks = self.infer_masks_and_blur(image_path)
         polys = []
         for i in range(masks.shape[-1]):
             mask = masks[:, :, i]

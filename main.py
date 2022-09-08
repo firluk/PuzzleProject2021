@@ -3,7 +3,9 @@ from puzzle import *
 
 
 def main():
-    pieces = segment_to_masks_and_extract_pieces('./weights/mask_rcnn_puzzle.h5', './plots/full_downscale.png')
+    segmentation_method = Inference.infer_masks_and_blur
+    weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale.png'
+    pieces = segment_to_masks_and_extract_pieces(weights_path, image_path, segmentation_method)
     cmp, iou, mgc, n_facets, n_pieces, n_side_pieces, n_middle_pieces = evaluate_edge_compatibility(pieces)
     piece_def = (n_pieces, n_side_pieces, n_middle_pieces)
     # sort and filter in descending order
@@ -13,7 +15,7 @@ def main():
     # print_figures_with_weights_to_folder(edges_by_mgc, mgc, pieces, 'mgc')
     print_figures_with_weights_to_folder(edges_by_iou, iou, pieces, 'iou')
     # TODO: user selects edges type
-    solution = MST_Solver(piece_def, edges_by_iou, iou).solveMST()
+    # solution = MST_Solver(piece_def, edges_by_iou, iou).solveMST()
 
 
 if __name__ == '__main__':

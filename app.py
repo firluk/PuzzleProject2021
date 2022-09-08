@@ -94,7 +94,7 @@ class Application(Frame):
 
         weights_path, image_path = self.weightsFilename, self.imageFilename
         inference = Inference(weights_path)
-        self.masks = inference.infer_masks_and_watershed(image_path)
+        self.masks = inference.infer_masks_and_blur(image_path)
         self.update_photo_image(_photo_image(np.invert(np.sum(self.masks, -1, keepdims=True))))
         # rebinding button to
         self.button.config(command=self.run_piece_classification_with_facet_segmentation_and_update_image,

@@ -61,9 +61,9 @@ def evaluate_edge_compatibility(pieces):
     return cmp, iou, mgc, n_facets, n_pieces, n_side_pieces, n_middle_pieces
 
 
-def segment_to_masks_and_extract_pieces(weights_path, image_path):
+def segment_to_masks_and_extract_pieces(weights_path, image_path, segmenting_method):
     inference = Inference(weights_path)
-    masks = inference.infer_masks_and_watershed(image_path)
+    masks = segmenting_method(inference, image_path)
     image = cv.imread(image_path)
     scale = 1
     masks = masks_in_scale(masks, scale)
