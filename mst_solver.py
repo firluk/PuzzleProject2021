@@ -2,10 +2,9 @@
 # Minimum Spanning Tree of a given connected,
 # undirected and weighted graph
 
-from collections import defaultdict
-
 # Class to represent a graph
 import numpy as np
+
 import block as bd
 
 
@@ -15,7 +14,7 @@ class MST_Solver:
         # TODO: asc or desc order of the final scoring system?
         # TODO: currently adapted for non-decreasing order
         self.V = piece_def[0]  # No. of puzzle pieces
-        self.n_side = piece_def[1] # TODO: use for frame calculation
+        self.n_side = piece_def[1]  # TODO: use for frame calculation
         self.n_middle = piece_def[2]
         self.n_corner = 4
         self.graph = edges  # sorted edges by score
@@ -45,7 +44,8 @@ class MST_Solver:
         if rank[xroot] < rank[yroot]:
             # TODO: fix block indecies!!!
             block = bd.joinBlocks(blocks[x_block], blocks[y_block],
-                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3], self.score_mat)
+                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3],
+                                  self.score_mat)
             if block is False:
                 return block
             else:
@@ -54,7 +54,8 @@ class MST_Solver:
             parent[xroot] = yroot
         elif rank[xroot] > rank[yroot]:
             block = bd.joinBlocks(blocks[x_block], blocks[y_block],
-                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3], self.score_mat)
+                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3],
+                                  self.score_mat)
             if block is False:
                 return block
             else:
@@ -66,7 +67,8 @@ class MST_Solver:
         # and increment its rank by one
         else:
             block = bd.joinBlocks(blocks[x_block], blocks[y_block],
-                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3], self.score_mat)
+                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3],
+                                  self.score_mat)
             if block is False:
                 return block
             else:
@@ -89,6 +91,7 @@ class MST_Solver:
                 return i
 
                 # The main function to construct MST using Kruskal's
+
     # algorithm
 
     def solveMST(self):
@@ -110,14 +113,14 @@ class MST_Solver:
         for node in range(self.V):
             parent.append(node)
             rank.append(0)
-            blocks.append(bd.Block(node))   # create blocks of single piece each TODO: complete the code
+            blocks.append(bd.Block(node))  # create blocks of single piece each TODO: complete the code
 
         # Number of edges to be taken is equal to V-1
         while e < self.V - 1:
 
             # Step 2: Pick the smallest edge and increment
             # the index for next iteration
-            i, [p1, p2, fp1, fp2] = self.validateEdge(i, validation_mat)     # returns edge with 2 available facets
+            i, [p1, p2, fp1, fp2] = self.validateEdge(i, validation_mat)  # returns edge with 2 available facets
 
             x = self.find(parent, p1)
             y = self.find(parent, p2)
@@ -170,3 +173,57 @@ class MST_Solver:
 # g.solveMST()
 
 # This code is contributed by Neelam Yadav
+
+###### mocks and driver
+def mock1():
+    #
+    # Minimalistic mock having only 5 edges, all of which are part of the solution
+    #
+    # Facets of piece 'p'
+    #
+    #    0
+    # 1 [p] 3
+    #    2
+    #
+    # Suppose the Puzzle is 2 x 3
+    #
+    # [0] [1]
+    # [2] [3]
+    # [4] [5]
+    #
+    # Test 1:   Edges:
+    #
+    # [0]9[1] (0,1,3,1),9
+    #  8      (0,2,2,0),8
+    # [2]4[3] (2,3,3,1),4
+    #      7  (3,5,2,0),7
+    # [4]6[5] (4,5,3,1),6
+    #
+    edges_and_vals = \
+        [
+            ((0, 1, 3, 1), 9),
+            ((0, 2, 2, 0), 8),
+            ((2, 3, 3, 1), 4),
+            ((3, 5, 2, 0), 7),
+            ((4, 5, 3, 1), 6)
+        ]
+    n_pieces = 6
+    n_facets = 4
+    n_side = 2
+    n_middle = 0
+
+    score_mat = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
+    for i, (edge, val) in enumerate(edges_and_vals):
+        score_mat[edge] = val
+
+    return (n_pieces, n_side, n_middle), [edge for (edge, val) in edges_and_vals], score_mat
+
+
+def main():
+    piece_def, edges, score_mat = mock1()
+    solver = MST_Solver(piece_def, edges, score_mat)
+    solver.solveMST()
+
+
+if __name__ == '__main__':
+    main()
