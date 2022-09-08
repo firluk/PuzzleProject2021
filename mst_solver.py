@@ -82,7 +82,7 @@ class MST_Solver:
     def findBlock(self, blocks, ind):
 
         for i, block in enumerate(blocks):
-            if block.block_id == ind:
+            if block.id == ind:
                 return i
 
                 # The main function to construct MST using Kruskal's
