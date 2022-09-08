@@ -193,18 +193,18 @@ def mock1():
     #
     # Test 1:   Edges:
     #
-    # [0]9[1] ((0,1,3,1),9),
-    #  8   1  ((0,2,2,0),8), ((1,3,2,0),1),
-    # [2]4[3] ((2,3,3,1),4),
-    #  1   7  ((2,4,2,0),7), ((3,5,2,0),7),
-    # [4]6[5] ((4,5,3,1),6)
+    # [0]9[1] (0,1,3,1),9
+    #  8      (0,2,2,0),8
+    # [2]4[3] (2,3,3,1),4
+    #      7  (3,5,2,0),7
+    # [4]6[5] (4,5,3,1),6
     #
     edges_and_vals = \
         [
             ((0, 1, 3, 1), 9),
-            ((0, 2, 2, 0), 8), ((1, 3, 2, 0), 1),
+            ((0, 2, 2, 0), 8),
             ((2, 3, 3, 1), 4),
-            ((2, 4, 2, 0), 7), ((3, 5, 2, 0), 7),
+            ((3, 5, 2, 0), 7),
             ((4, 5, 3, 1), 6)
         ]
     n_pieces = 6
@@ -216,7 +216,7 @@ def mock1():
     for i, (edge, val) in enumerate(edges_and_vals):
         score_mat[edge] = val
 
-    return (n_pieces, n_side, n_middle), sorted([edge for (edge, val) in edges_and_vals], reverse=True), score_mat
+    return (n_pieces, n_side, n_middle), [edge for (edge, val) in edges_and_vals], score_mat
 
 
 def main():
