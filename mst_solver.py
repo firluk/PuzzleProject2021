@@ -157,6 +157,11 @@ edges = [[0, 1, 2, 2], [0, 2, 2, 0], [2, 3, 1, 3], [1, 2, 3, 0],
 # [4, 5, 1, 1], [3, 4, 2, 2]
 g = Graph(6, edges)
 
+# n_facets = 4
+# n_pieces = 24
+# n_side_pieces = 12
+# n_middle_pieces = 8
+
 # Function call
 g.KruskalMST()
 
