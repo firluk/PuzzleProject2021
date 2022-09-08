@@ -170,7 +170,3 @@ def paint_facets_according_to_type(masks, pieces):
         left_width, top_height = left + width, top + height
         masks_with_facets[top:top_height, left:left_width] = img
     return masks_with_facets
-
-
-if __name__ == '__main__':
-    main()
