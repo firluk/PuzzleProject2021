@@ -11,11 +11,15 @@ import block as bd
 
 class MST_Solver:
 
-    def __init__(self, numOfPieces, edges):
+    def __init__(self, piece_def, edges, score_mat):
         # TODO: asc or desc order of the final scoring system?
         # TODO: currently adapted for non-decreasing order
-        self.V = numOfPieces  # No. of puzzle pieces
+        self.V = piece_def[0]  # No. of puzzle pieces
+        self.n_side = piece_def[1] # TODO: use for frame calculation
+        self.n_middle = piece_def[2]
+        self.n_corner = 4
         self.graph = edges  # sorted edges by score
+        self.score_mat = score_mat
 
     # A utility function to find set of an element i
     # (uses path compression technique)
@@ -28,7 +32,7 @@ class MST_Solver:
     # (uses union by rank)
 
     def union(self, parent, rank, x, y, i, blocks):
-    # def union(self, parent, rank, x, y):
+        # def union(self, parent, rank, x, y):
         xroot = self.find(parent, x)
         yroot = self.find(parent, y)
 
@@ -41,7 +45,7 @@ class MST_Solver:
         if rank[xroot] < rank[yroot]:
             # TODO: fix block indecies!!!
             block = bd.joinBlocks(blocks[x_block], blocks[y_block],
-                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3])
+                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3], self.score_mat)
             if block is False:
                 return block
             else:
@@ -50,7 +54,7 @@ class MST_Solver:
             parent[xroot] = yroot
         elif rank[xroot] > rank[yroot]:
             block = bd.joinBlocks(blocks[x_block], blocks[y_block],
-                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3])
+                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3], self.score_mat)
             if block is False:
                 return block
             else:
@@ -62,7 +66,7 @@ class MST_Solver:
         # and increment its rank by one
         else:
             block = bd.joinBlocks(blocks[x_block], blocks[y_block],
-                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3])
+                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3], self.score_mat)
             if block is False:
                 return block
             else:
@@ -70,7 +74,6 @@ class MST_Solver:
                 del blocks[y_block]
             parent[yroot] = xroot
             rank[xroot] += 1
-
 
     def validateEdge(self, i, validationMat):
 
@@ -90,7 +93,7 @@ class MST_Solver:
 
     def solveMST(self):
 
-        result = []  # This will store the resultant MST
+        # result = []  # This will store the resultant MST
 
         # An index variable, used for sorted edges
         i = 0
@@ -133,7 +136,7 @@ class MST_Solver:
                 # validation_mat[p2][fp2] = 1
                 if self.union(parent, rank, x, y, i, blocks) is not False:
                     e = e + 1
-                    result.append([p1, p2, fp1, fp2])
+                    # result.append([p1, p2, fp1, fp2])
                     validation_mat[p1][fp1] = 1
                     validation_mat[p2][fp2] = 1
 
@@ -142,27 +145,28 @@ class MST_Solver:
 
         # minimumCost = 0
         # print("Edges in the constructed MST")
-        for p1, p2, _, _ in result:
-            #     minimumCost += weight
-            print("%d -- %d" % (p1, p2))
+        # for p1, p2, _, _ in result:
+        #     #     minimumCost += weight
+        #     print("%d -- %d" % (p1, p2))
 
         # print("Minimum Spanning Tree", minimumCost)
 
 
 # Driver code
 
-edges = [[0, 1, 2, 2], [0, 2, 2, 0], [2, 3, 1, 3], [1, 2, 3, 0],
-         [1, 3, 2, 0], [2, 3, 0, 0], [0, 3, 1, 0], [0, 1, 1, 3],
-         [4, 5, 1, 1], [3, 4, 2, 2]]
-# [4, 5, 1, 1], [3, 4, 2, 2]
-g = MST_Solver(6, edges)
-
-# n_facets = 4
-# n_pieces = 24
-# n_side_pieces = 12
-# n_middle_pieces = 8
-
-# Function call
-g.solveMST()
+# edges = [[0, 1, 2, 2], [0, 2, 2, 0], [2, 3, 1, 3], [1, 2, 3, 0],
+#          [1, 3, 2, 0], [2, 3, 0, 0], [0, 3, 1, 0], [0, 1, 1, 3],
+#          [4, 5, 1, 1], [3, 4, 2, 2]]
+# # [4, 5, 1, 1], [3, 4, 2, 2]
+# cmp = np.load("cmp.npy")
+# g = MST_Solver(6, edges, cmp)
+#
+# # n_facets = 4
+# # n_pieces = 24
+# # n_side_pieces = 12
+# # n_middle_pieces = 8
+#
+# # Function call
+# g.solveMST()
 
 # This code is contributed by Neelam Yadav
