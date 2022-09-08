@@ -6,7 +6,7 @@ from collections import defaultdict
 
 # Class to represent a graph
 import numpy as np
-import Block_draft as bd
+import block as bd
 
 
 class Graph:
@@ -26,29 +26,51 @@ class Graph:
 
     # A function that does union of two sets of x and y
     # (uses union by rank)
+
     def union(self, parent, rank, x, y, i, blocks):
+    # def union(self, parent, rank, x, y):
         xroot = self.find(parent, x)
         yroot = self.find(parent, y)
 
         # Attach smaller rank tree under root of
         # high rank tree (Union by Rank)
+        print(rank[xroot], xroot, rank[yroot], yroot)
+
+        x_block = self.findBlock(blocks, xroot)
+        y_block = self.findBlock(blocks, yroot)
         if rank[xroot] < rank[yroot]:
             # TODO: fix block indecies!!!
-            block = bd.joinBlocks(blocks[xroot], blocks[yroot], self.graph[i][0], self.graph[i][2], self.graph[i][1],
-                          self.graph[i][3])
+            block = bd.joinBlocks(blocks[x_block], blocks[y_block],
+                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3])
             if block is False:
                 return block
             else:
-                blocks[xroot] = block
+                blocks[x_block] = block
+                del blocks[y_block]
             parent[xroot] = yroot
         elif rank[xroot] > rank[yroot]:
+            block = bd.joinBlocks(blocks[x_block], blocks[y_block],
+                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3])
+            if block is False:
+                return block
+            else:
+                blocks[y_block] = block
+                del blocks[x_block]
             parent[yroot] = xroot
 
         # If ranks are same, then make one as root
         # and increment its rank by one
         else:
+            block = bd.joinBlocks(blocks[x_block], blocks[y_block],
+                                  self.graph[i][0], self.graph[i][2], self.graph[i][1], self.graph[i][3])
+            if block is False:
+                return block
+            else:
+                blocks[x_block] = block
+                del blocks[y_block]
             parent[yroot] = xroot
             rank[xroot] += 1
+
 
     def validateEdge(self, i, validationMat):
 
@@ -57,7 +79,13 @@ class Graph:
             i = i + 1
         return i, self.graph[i]
 
-    # The main function to construct MST using Kruskal's
+    def findBlock(self, blocks, ind):
+
+        for i, block in enumerate(blocks):
+            if block.block_id == ind:
+                return i
+
+                # The main function to construct MST using Kruskal's
     # algorithm
 
     def KruskalMST(self):
@@ -88,7 +116,6 @@ class Graph:
             # the index for next iteration
             i, [p1, p2, fp1, fp2] = self.validateEdge(i, validation_mat)     # returns edge with 2 available facets
 
-
             x = self.find(parent, p1)
             y = self.find(parent, p2)
 
@@ -97,8 +124,13 @@ class Graph:
             # and increment the indexof result
             # for next edge
             if x != y:
-                print("alive")
+                print(parent, rank)
                 # return list of edges involved indirectly in the block or empty list
+                # e = e + 1
+                # self.union(parent, rank, x, y)
+                # result.append([p1, p2, fp1, fp2])
+                # validation_mat[p1][fp1] = 1
+                # validation_mat[p2][fp2] = 1
                 if self.union(parent, rank, x, y, i, blocks) is not False:
                     e = e + 1
                     result.append([p1, p2, fp1, fp2])
@@ -113,7 +145,7 @@ class Graph:
         for p1, p2, _, _ in result:
             #     minimumCost += weight
             print("%d -- %d" % (p1, p2))
-        print(parent)
+
         # print("Minimum Spanning Tree", minimumCost)
 
 
