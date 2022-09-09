@@ -138,7 +138,7 @@ def sort_and_filter(n_pieces, n_facets, filter_val, weights, descending=True):
     return edges
 
 
-def paint_facets_to_distinct(masks, pieces):
+def paint_facets_by_type(masks, pieces):
     width, height, _ = masks.shape
     masks_with_facets = np.ones((width, height, 3), dtype=np.uint8) * 255
     for piece in pieces:
@@ -158,7 +158,7 @@ def paint_facets_to_distinct(masks, pieces):
     return masks_with_facets
 
 
-def paint_facets_according_to_type(masks, pieces):
+def paint_facets_distinct(masks, pieces):
     width, height, _ = masks.shape
     masks_with_facets = np.ones((width, height, 3), dtype=np.uint8) * 255
     for piece in pieces:

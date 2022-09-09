@@ -7,7 +7,7 @@ import numpy as np
 from PIL import ImageTk, Image
 
 from piece import masks_in_scale, image_in_scale, pieces_from_masks
-from puzzle import paint_facets_to_distinct, paint_facets_according_to_type
+from puzzle import paint_facets_by_type, paint_facets_distinct
 from puzzle_piece_detector.inference_callable import Inference
 
 
@@ -111,7 +111,7 @@ class Application(Frame):
         pieces = pieces_from_masks(masks, image)
         self.pieces = pieces
 
-        masks_with_facets = paint_facets_according_to_type(masks, pieces)
+        masks_with_facets = paint_facets_distinct(masks, pieces)
 
         # from matplotlib import pyplot as plt; plt.imshow(masks_with_facets); plt.show(); plt.close()
         self.update_photoImage_using_np_array(masks_with_facets)
@@ -120,13 +120,11 @@ class Application(Frame):
                            text="Show facets by classification")
 
     def show_facets_by_classification(self):
-
         pieces = self.pieces
         masks = self.masks
-        masks_with_facets = paint_facets_to_distinct(masks, pieces)
-
+        masks_with_facets = paint_facets_by_type(masks, pieces)
         self.update_photoImage_using_np_array(masks_with_facets)
-        pass
+        # TODO add next screens from here
 
     def update_photoImage_using_np_array(self, masks_with_facets):
         masks_with_facets = cv.resize(masks_with_facets, (self.photoImage.width(), self.photoImage.height()))
