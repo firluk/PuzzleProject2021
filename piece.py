@@ -208,15 +208,6 @@ class Piece:
         self.corners = corners
         self.center = np.mean(corners)
         self.facets = create_facets()
-        # img = np.zeros_like(cropped_image)
-        # facet_colors = np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 255]]).astype(np.uint8)
-        # for fi in range(len(self.facets)):
-        #     mask = self.facets[fi].facet_mask
-        #     img[mask, :] = facet_colors[fi, :]
-        # plt.imshow(img)
-        # plt.axis('off')
-        # plt.show()
-        # plt.close()
         self.type = resolve_type()
         self.piece_id = piece_id
 
