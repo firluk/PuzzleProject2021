@@ -4,7 +4,8 @@ from puzzle import *
 
 def main():
     segmentation_method = Inference.infer_masks_and_blur
-    weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale.png'
+    # weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale.png'
+    weights_path, image_path = './weights/mask_rcnn_puzzle.h5', 'https://image.shutterstock.com/mosaic_250/186843688/1721697922/stock-vector-puzzle-jigsaw-puzzle-icon-vector-design-template-1721697922.jpg'
     pieces, masks = segment_to_masks_and_extract_pieces(weights_path, image_path, segmentation_method)
     cmp, iou, mgc, n_facets, n_pieces, n_side_pieces, n_middle_pieces = evaluate_edge_compatibility(pieces)
     piece_def = (n_pieces, n_side_pieces, n_middle_pieces)

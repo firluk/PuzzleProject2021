@@ -4,6 +4,7 @@ from tkinter import messagebox
 
 import cv2 as cv
 import numpy as np
+import skimage
 from PIL import ImageTk, Image
 
 from piece import masks_in_scale, image_in_scale, pieces_from_masks
@@ -104,7 +105,7 @@ class Application(Frame):
         print("Piece classification")
         image_path = self.imageFilename
         masks = self.masks
-        image = cv.imread(image_path)
+        image = skimage.io.imread(image_path)
         scale = 1
         masks = masks_in_scale(masks, scale)
         image = image_in_scale(image, scale)

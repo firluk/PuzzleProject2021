@@ -1,6 +1,7 @@
 import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
+import skimage
 
 from facet import Facet
 from main import main
@@ -66,7 +67,7 @@ def evaluate_edge_compatibility(pieces):
 def segment_to_masks_and_extract_pieces(weights_path, image_path, segmenting_method):
     inference = Inference(weights_path)
     masks = segmenting_method(inference, image_path)
-    image = cv.imread(image_path)
+    image = skimage.io.imread(image_path)
     scale = 1
     masks = masks_in_scale(masks, scale)
     image = image_in_scale(image, scale)

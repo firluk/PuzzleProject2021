@@ -121,7 +121,7 @@ class Inference:
         kernel = np.ones((3, 3), np.uint8)
         inferred_thresh = cv.morphologyEx(inferred_thresh, cv.MORPH_ERODE, kernel, iterations=2)
 
-        img = cv.imread(image_path)
+        img = skimage.io.imread(image_path)
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         _, thresh = cv.threshold(gray, 254, 255, cv.THRESH_BINARY_INV)
         # thresh = cv.adaptiveThreshold(gray, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 11, 2)
