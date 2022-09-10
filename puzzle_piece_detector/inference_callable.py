@@ -13,20 +13,8 @@ Usage:
 
 
     # Apply color splash to an image
-    python3 inference.py splash --weights=/path/to/weights/file.h5 --image=<path to file>
-
-
-    # Outline puzzle piece polygons in the image
-    python3 inference.py outline --weights=/path/to/weights/file.h5 --image=<path to file>
-
-
-    # Retrieve puzzle piece polygons of the image to JSON file
-    python3 inference.py polys --weights=/path/to/weights/file.h5 --image=<path to file>
-
-
-    # Retrieve puzzle piece polygons of the image to JSON file
-    python3 inference.py masks --weights=/path/to/weights/file.h5 --image=<path to file>
-
+    inference = Inference()
+    inference.infer_masks() // or any of the other methods of the class
 
 """
 
