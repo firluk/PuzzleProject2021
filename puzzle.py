@@ -150,7 +150,7 @@ def paint_facets_by_type(masks, pieces):
         facet_colors[Facet.Type.BLANK] = np.array([255, 0, 0], dtype=np.uint8)
         for fi in range(len(piece.facets)):
             facet = piece.facets[fi]
-            mask = facet.facet_mask
+            mask = facet.facet_mask_custom_contour_size(3)
             img[mask, :] = facet_colors[facet.type]
         height, width, _ = piece.cropped_image.shape
         left, top = piece.left, piece.top
@@ -166,7 +166,7 @@ def paint_facets_distinct(masks, pieces):
         img = np.ones_like(piece.cropped_image) * 255
         facet_colors = np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 0, 0]]).astype(np.uint8)
         for fi in range(len(piece.facets)):
-            mask = piece.facets[fi].facet_mask
+            mask = piece.facets[fi].facet_mask_custom_contour_size(3)
             img[mask, :] = facet_colors[fi, :]
         height, width, _ = piece.cropped_image.shape
         left, top = piece.left, piece.top

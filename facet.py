@@ -109,6 +109,11 @@ class Facet:
         self.next_facet: Facet = next_facet
         self.prev_facet: Facet = prev_facet
 
+    def facet_mask_custom_contour_size(self, contour_size=1):
+        shape = (self.piece.cropped_mask.shape[0], self.piece.cropped_mask.shape[1])
+        mask = cv.polylines(np.zeros(shape), [self.strip_coordinates], False, 255, contour_size).astype(np.bool_)
+        return mask
+
     def calculate_aligned_bitmaps(self, other):
         blank, tab = self.assign_blank_and_tab(other)
 
