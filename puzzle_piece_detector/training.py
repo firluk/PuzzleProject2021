@@ -12,11 +12,11 @@ Derived from Balloon example by Waleed Abdulla as stated above.
 Usage:
 
     # Train a new model starting from pre-trained COCO weights
-    python3 puzzle.py training --dataset=/path/to/puzzle/dataset --weights=coco
+    python3 training.py training --dataset=/path/to/puzzle/dataset --weights=coco
 
 
     # Train a new model starting from pre-trained COCO weights
-    python3 puzzle.py training --dataset=/path/to/puzzle/dataset --weights=mask_rcnn_coco.h5
+    python3 training.py training --dataset=/path/to/puzzle/dataset --weights=mask_rcnn_coco.h5
 
 
 
