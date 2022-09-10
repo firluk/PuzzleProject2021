@@ -44,9 +44,7 @@ class Facet:
             Retrieve the binary mask of the strip, relative to supplied cropped mask
             :return: binary mask of the strip
             """
-            shape = (self.piece.cropped_mask.shape[0], self.piece.cropped_mask.shape[1])
-            mask = cv.polylines(np.zeros(shape), [self.strip_coordinates], False, 255, 1).astype(np.bool_)
-            return mask
+            return facet_mask_outer(self)
 
         def facet_image():
             """
@@ -117,11 +115,18 @@ class Facet:
     def calculate_aligned_bitmaps(self, other):
         blank, tab = self.assign_blank_and_tab(other)
 
+        # epsilon = int(cv.arcLength(tab.strip_coordinates, False) * 0.1)
+        # tab_coords_trim = tab.strip_coordinates[epsilon:-epsilon]
+        # blank_coords_trim = blank.strip_coordinates[epsilon:-epsilon]
+        # tab_xy = np.squeeze(cv.approxPolyDP(tab_coords_trim, 0, False))
+        # blank_xy = np.squeeze(cv.approxPolyDP(blank_coords_trim, 0, False))
+
         tab_xy = (np.squeeze(tab.strip_coordinates_approx))
+        blank_xy = (np.squeeze(blank.strip_coordinates_approx))
+
         tab_xy_ht_diff = tab_xy[-1] - tab_xy[0]
         tab_length = np.sqrt(tab_xy_ht_diff[0] ** 2 + tab_xy_ht_diff[1] ** 2)
 
-        blank_xy = (np.squeeze(blank.strip_coordinates_approx))
         blank_xy_ht_diff = blank_xy[-1] - blank_xy[0]
         blank_length = np.sqrt(blank_xy_ht_diff[0] ** 2 + blank_xy_ht_diff[1] ** 2)
 
@@ -153,9 +158,10 @@ class Facet:
             return False
         elif self.type == other.type:
             return False
-        elif (self.next_facet.type is Facet.Type.FLAT and other.prev_facet.type is not Facet.Type.FLAT) or \
-                (self.prev_facet.type is Facet.Type.FLAT and other.next_facet.type is not Facet.Type.FLAT):
-            return False
+        # TODO
+        # elif (self.next_facet.type is Facet.Type.FLAT and other.prev_facet.type is not Facet.Type.FLAT) or \
+        #         (self.prev_facet.type is Facet.Type.FLAT and other.next_facet.type is not Facet.Type.FLAT):
+        #     return False
         else:
             return True
 
@@ -265,3 +271,9 @@ def align_along_x(xy):
 
 def shift_to_top(xy):
     return xy - (0, np.min(xy[:, 1]))
+
+
+def facet_mask_outer(facet: Facet, as_bool=True):
+    shape = (facet.piece.cropped_mask.shape[0], facet.piece.cropped_mask.shape[1])
+    mask = cv.polylines(np.zeros(shape), [facet.strip_coordinates], False, 255, 1).astype(np.bool_)
+    return mask if as_bool else mask.astype(np.uint8)
