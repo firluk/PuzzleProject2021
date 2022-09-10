@@ -215,7 +215,7 @@ def joinBlocks(block_a, block_b, p_a, fp_a, p_b, fp_b, score_mat):
                 elif cell_b is not None and block_a_rotated.block[i + 1][j] is not None:
                     print(cell_b.piece_ind, cell_b.facet_piece_ind, block_a_rotated.block[i + 1][j].piece_ind,
                           block_a_rotated.block[i + 1][j].facet_piece_ind)
-                    if validateMatch(score_mat, cell_a, block_a_rotated.block[i + 1][j], 1) is False:
+                    if validateMatch(score_mat, cell_b, block_a_rotated.block[i + 1][j], 1) is False:
                         return False
                     else:
                         used_edge_stack.append([cell_b.piece_ind, block_a_rotated.block[i + 1][j].piece_ind,

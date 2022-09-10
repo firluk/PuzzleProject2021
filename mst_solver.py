@@ -49,8 +49,8 @@ class MST_Solver:
             if block is False:
                 return block
             else:
-                blocks[x_block].block = block[0]
-                del blocks[y_block]
+                blocks[y_block].block = block[0]
+                del blocks[x_block]
             parent[xroot] = yroot
         elif rank[xroot] > rank[yroot]:
             block = bd.joinBlocks(blocks[x_block], blocks[y_block],
@@ -59,9 +59,9 @@ class MST_Solver:
             if block is False:
                 return block
             else:
-                blocks[y_block].block = block[0]
-                blocks[y_block].id = xroot
-                del blocks[x_block]
+                blocks[x_block].block = block[0]
+                # blocks[y_block].id = xroot
+                del blocks[y_block]
             parent[yroot] = xroot
 
         # If ranks are same, then make one as root
@@ -95,7 +95,10 @@ class MST_Solver:
     def print_solution(self, assembled_block):
         for row in assembled_block:
             for cell in row:
-                print("piece %d facet %d" % (cell.piece_ind, cell.facet_piece_ind))
+                if cell is None:
+                    print("None")
+                else:
+                    print("piece %d facet %d" % (cell.piece_ind, cell.facet_piece_ind))
 
     # The main function to construct MST using Kruskal's algorithm
     def solveMST(self):
@@ -122,6 +125,7 @@ class MST_Solver:
         # Number of edges to be taken is equal to V-1
         while e < self.V - 1:
 
+            # TODO: stop the loop if i == self.graph.shape[0]
             # Step 2: Pick the smallest edge and increment
             # the index for next iteration
             i, [p1, p2, fp1, fp2] = self.validateEdge(i, validation_mat)  # returns edge with 2 available facets
@@ -131,7 +135,7 @@ class MST_Solver:
 
             # If including this edge doesn't
             # cause cycle, include it in result
-            # and increment the indexof result
+            # and increment the index of result
             # for next edge
             if x != y:
                 print(parent, rank)
@@ -148,6 +152,7 @@ class MST_Solver:
                     validation_mat[p2][fp2] = 1
 
             i = i + 1
+        # TODO: return matrix of (p,fp)
         self.print_solution(blocks[0].block)
         # Else discard the edge
 
