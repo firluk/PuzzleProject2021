@@ -115,14 +115,14 @@ class Facet:
     def calculate_aligned_bitmaps(self, other):
         blank, tab = self.assign_blank_and_tab(other)
 
-        # epsilon = int(cv.arcLength(tab.strip_coordinates, False) * 0.1)
-        # tab_coords_trim = tab.strip_coordinates[epsilon:-epsilon]
-        # blank_coords_trim = blank.strip_coordinates[epsilon:-epsilon]
-        # tab_xy = np.squeeze(cv.approxPolyDP(tab_coords_trim, 0, False))
-        # blank_xy = np.squeeze(cv.approxPolyDP(blank_coords_trim, 0, False))
+        epsilon = int(cv.arcLength(tab.strip_coordinates, False) * 0.1)
+        tab_coords_trim = tab.strip_coordinates[epsilon:-epsilon]
+        blank_coords_trim = blank.strip_coordinates[epsilon:-epsilon]
+        tab_xy = np.squeeze(cv.approxPolyDP(tab_coords_trim, 0, False))
+        blank_xy = np.squeeze(cv.approxPolyDP(blank_coords_trim, 0, False))
 
-        tab_xy = (np.squeeze(tab.strip_coordinates_approx))
-        blank_xy = (np.squeeze(blank.strip_coordinates_approx))
+        # tab_xy = (np.squeeze(tab.strip_coordinates_approx))
+        # blank_xy = (np.squeeze(blank.strip_coordinates_approx))
 
         tab_xy_ht_diff = tab_xy[-1] - tab_xy[0]
         tab_length = np.sqrt(tab_xy_ht_diff[0] ** 2 + tab_xy_ht_diff[1] ** 2)
@@ -158,10 +158,12 @@ class Facet:
             return False
         elif self.type == other.type:
             return False
-        # TODO
-        # elif (self.next_facet.type is Facet.Type.FLAT and other.prev_facet.type is not Facet.Type.FLAT) or \
-        #         (self.prev_facet.type is Facet.Type.FLAT and other.next_facet.type is not Facet.Type.FLAT):
-        #     return False
+        elif \
+                (self.next_facet.type is Facet.Type.FLAT and other.prev_facet.type is not Facet.Type.FLAT) or \
+                (self.prev_facet.type is Facet.Type.FLAT and other.next_facet.type is not Facet.Type.FLAT) or \
+                (other.prev_facet.type is Facet.Type.FLAT and self.prev_facet.type is not Facet.Type.FLAT) or \
+                (other.prev_facet.type is Facet.Type.FLAT and self.next_facet.type is not Facet.Type.FLAT):
+            return False
         else:
             return True
 
