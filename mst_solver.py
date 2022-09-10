@@ -37,7 +37,7 @@ class MST_Solver:
 
         # Attach smaller rank tree under root of
         # high rank tree (Union by Rank)
-        print(rank[xroot], xroot, rank[yroot], yroot)
+        # print(rank[xroot], xroot, rank[yroot], yroot)
 
         x_block = self.findBlock(blocks, xroot)
         y_block = self.findBlock(blocks, yroot)
@@ -49,7 +49,7 @@ class MST_Solver:
             if block is False:
                 return block
             else:
-                blocks[x_block] = block
+                blocks[x_block].block = block[0]
                 del blocks[y_block]
             parent[xroot] = yroot
         elif rank[xroot] > rank[yroot]:
@@ -59,7 +59,8 @@ class MST_Solver:
             if block is False:
                 return block
             else:
-                blocks[y_block] = block
+                blocks[y_block].block = block[0]
+                blocks[y_block].id = xroot
                 del blocks[x_block]
             parent[yroot] = xroot
 
@@ -72,7 +73,8 @@ class MST_Solver:
             if block is False:
                 return block
             else:
-                blocks[x_block] = block
+                blocks[x_block].block = block[0]
+                # blocks[x_block].id = xroot
                 del blocks[y_block]
             parent[yroot] = xroot
             rank[xroot] += 1
@@ -90,10 +92,12 @@ class MST_Solver:
             if block.id == ind:
                 return i
 
-                # The main function to construct MST using Kruskal's
+    def print_solution(self, assembled_block):
+        for row in assembled_block:
+            for cell in row:
+                print("piece %d facet %d" % (cell.piece_ind, cell.facet_piece_ind))
 
-    # algorithm
-
+    # The main function to construct MST using Kruskal's algorithm
     def solveMST(self):
 
         # result = []  # This will store the resultant MST
@@ -144,6 +148,7 @@ class MST_Solver:
                     validation_mat[p2][fp2] = 1
 
             i = i + 1
+        self.print_solution(blocks[0].block)
         # Else discard the edge
 
         # minimumCost = 0
