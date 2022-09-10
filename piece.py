@@ -61,17 +61,6 @@ class Piece:
             smoothed_rho = savgol_filter(rho, window_length, 3)
             peaks, _ = find_peaks(smoothed_rho, height=0)
 
-            # window_length = max(int(cv.arcLength(contour, True) * 0.001), 5)
-            # prominences = peak_prominences(smoothed_rho, peaks, window_length)[0]
-
-            # idx = np.argsort(prominences)[-4:]  # lowest 4
-            # idx = np.sort(idx)  # sort ascending
-            # idx = peaks[idx]  # contour indices
-            # idx = np.mod(idx + argmin_rho, x.shape)  # correct back shift
-            # idx = np.sort(idx)  # sort ascending
-            #
-            # xy = x[idx], y[idx]
-
             from itertools import combinations
 
             def angle_between(p1, p2):
@@ -93,12 +82,6 @@ class Piece:
                 bc = c - b
                 angles = angle_between(ba, bc)
                 angles_sum_of_squares = np.sum(np.power(angles - 90, 2))
-                #
-                # poly_ctr = [np.asarray(contour[np.asarray(comb)])]
-                # poly = cv.fillPoly(np.zeros_like(cropped_mask), poly_ctr, 1)
-                # plt.imshow(poly)
-                # plt.title(f'{angles},{angles_sum_of_squares}')
-                # plt.show()
 
                 if angles_sum_of_squares < min_comb_tuple[0]:
                     min_comb_2nd_tuple = min_comb_tuple
@@ -107,28 +90,6 @@ class Piece:
                     min_comb_2nd_tuple = (angles_sum_of_squares, comb)
 
             if min_comb_2nd_tuple[0] < np.inf:
-                # check whether this is a case of 4 tabs, by looking at negated rho values
-                #
-                # peaks, _ = find_peaks(-smoothed_rho, height=0)
-                # plt.plot(-smoothed_rho)
-                # plt.show()
-                # plt.close()
-                #
-                # corners_indices = min_comb_tuple[1]
-                # contour_split = np.split(contour, corners_indices)
-                # contour_split[0] = np.vstack((contour_split[-1], contour_split[0]))
-
-                # poly_ctr = [np.asarray(contour[np.asarray(min_comb_tuple[1])])]
-                # poly = cv.fillPoly(np.zeros_like(cropped_mask), poly_ctr, 1)
-                # plt.imshow(poly)
-                # plt.show()
-                # plt.close()
-                #
-                # poly_ctr = [np.asarray(contour[np.asarray(min_comb_2nd_tuple[1])])]
-                # poly = cv.fillPoly(np.zeros_like(cropped_mask), poly_ctr, 1)
-                # plt.imshow(poly)
-                # plt.show()
-                # plt.close()
 
                 comb = np.asarray(min_comb_tuple[1])
                 idx = np.array(comb)
@@ -154,17 +115,9 @@ class Piece:
             for i in range(4):
                 _image[xy[1][i], xy[0][i]] = 255
 
-            # plt.imshow(image)
-            # plt.show()
-            # plt.close()
-
             return xy, idx
 
         corners, corners_indices = retrieve_corners()
-
-        # plt.plot(corners[1], corners[0], marker='.', linestyle = 'None')
-        # plt.show()
-        # plt.close()
 
         def create_facets():
             facets = []  # list of Facet objects
