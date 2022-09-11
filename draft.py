@@ -8,6 +8,106 @@ import math, time
 import csv
 import re
 
+# # Parameters
+# blur = 21
+# canny_low = 15
+# canny_high = 150
+# min_area = 0.0005
+# max_area = 0.95
+# dilate_iter = 10
+# erode_iter = 10
+# mask_color = (0.0,0.0,0.0)
+# # initialize video from the webcam
+# video = cv2.VideoCapture(0)
+# while True:
+#     ret, frame = video.read()
+#     if ret == True:
+#         # Convert image to grayscale
+#         image_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#         # Apply Canny Edge Dection
+#         edges = cv2.Canny(image_gray, canny_low, canny_high)
+#         edges = cv2.dilate(edges, None)
+#         edges = cv2.erode(edges, None)
+#         # get the contours and their areas
+#         contour_info = [(c, cv2.contourArea(c),) for c in cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[1]]
+#         # Get the area of the image as a comparison
+#         image_area = frame.shape[0] * frame.shape[1]
+#
+#         # calculate max and min areas in terms of pixels
+#         max_area = max_area * image_area
+#         min_area = min_area * image_area
+#         # Set up mask with a matrix of 0's
+#         mask = np.zeros(edges.shape, dtype = np.uint8)
+#         # Go through and find relevant contours and apply to mask
+#         for contour in contour_info:
+#             # Instead of worrying about all the smaller contours, if the area is smaller than the min, the loop will break
+#             if contour[1] > min_area and contour[1] < max_area:
+#                 # Add contour to mask
+#                 mask = cv2.fillConvexPoly(mask, contour[0], (255))
+#         # use dilate, erode, and blur to smooth out the mask
+#         mask = cv2.dilate(mask, None, iterations=mask_dilate_iter)
+#         mask = cv2.erode(mask, None, iterations=mask_erode_iter)
+#         mask = cv2.GaussianBlur(mask, (blur, blur), 0)
+#         # Ensures data types match up
+#         mask_stack = mask_stack.astype('float32') / 255.0
+#         frame = frame.astype('float32') / 255.0
+#         # Blend the image and the mask
+#         masked = (mask_stack * frame) + ((1-mask_stack) * mask_color)
+#         masked = (masked * 255).astype('uint8')
+#         cv2.imshow("Foreground", masked)
+#         # Use the q button to quit the operation
+#         if cv2.waitKey(60) & 0xff == ord('q'):
+#             break
+#     else:
+#         break
+# cv2.destroyAllWindows()
+# video.release()
+
+import numpy as np
+# import imutils
+import cv2
+
+# Load image, resize smaller, HSV color threshold
+image = cv2.imread('plots/full_downscale.png')
+scale_percent = 60  # percent of original size
+width = int(image.shape[1] * scale_percent / 100)
+height = int(image.shape[0] * scale_percent / 100)
+dim = (width, height)
+
+# resize image
+image = cv2.resize(image, dim)
+# image = imutils.resize(image, width=600)
+hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+sensitivity = 5
+lower_white = np.array([0,0,255-sensitivity])
+upper_white = np.array([255,sensitivity,255])
+mask = cv2.inRange(hsv, lower_white, upper_white)
+# Remove small noise on mask with morph open
+kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2,2))
+closing = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=3)
+opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel, iterations=3)
+closing2 = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel, iterations=3)
+# opening = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=3)
+# smooth_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
+# opening = cv2.morphologyEx(opening, cv2.MORPH_OPEN, smooth_kernel, iterations=3)
+# result = cv2.bitwise_and(image, image, mask=opening)
+# result[opening==0] = (255,255,255) # Optional for white background
+
+ret,thresh = cv2.threshold(mask,127,255,0)
+contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+for i in range(len(contours)):
+    if contours[i].shape[0] > 150:
+        cv2.drawContours(mask, contours, i, (127, 127, 127), 3)
+# cv2.drawContours(mask, contours, -1, (127,127,127), 3)
+# cv2.drawContours(mask, contours, 2, (127,127,127), 3)
+
+# cv2.imshow('result', result)
+cv2.imshow('mask', mask)
+# cv2.imshow('closing', closing)
+# cv2.imshow('opening', opening)
+# cv2.imshow('closing2', closing2)
+cv2.waitKey()
+
 # file1=open("proto/nominal.csv")
 # file2=open("proto/temp.txt",'a')
 #
