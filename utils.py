@@ -5,6 +5,7 @@ import cv2 as cv
 import numpy as np
 import skimage.draw
 import skimage.io
+from matplotlib import pyplot as plt
 
 
 def masks_from_via_region_data(via_region_data_json_path, filename):
@@ -113,3 +114,66 @@ def image_with_contour_in_scale(image, contour, scale):
     scaled_image[unique_scaled_down[:, 1], unique_scaled_down[:, 0]] = 255
     return scaled_image
 
+
+def infer_using_saturation_and_hue(image_path):
+    image = cv.imread(image_path)
+    scale_percent = 60  # percent of original size
+    width = int(image.shape[1] * scale_percent / 100)
+    height = int(image.shape[0] * scale_percent / 100)
+    dim = (width, height)
+
+    # resize image
+    image = cv.resize(image, dim)
+    # image = imutils.resize(image, width=600)
+    hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+    sensitivity = 5
+    lower_white = np.array([0, 0, 255 - sensitivity])
+    upper_white = np.array([255, sensitivity, 255])
+    mask = cv.inRange(hsv, lower_white, upper_white)
+
+    # Remove small noise on mask with morph open
+    kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (2, 2))
+    closing = cv.morphologyEx(mask, cv.MORPH_CLOSE, kernel, iterations=3)
+    opening = cv.morphologyEx(closing, cv.MORPH_OPEN, kernel, iterations=3)
+
+    ret, thresh = cv.threshold(mask, 127, 255, 0)
+    contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+
+    long_contours = [c for c in contours if c.shape[0] > 150]
+
+    filled = cv.drawContours(np.zeros_like(mask), long_contours, -1, (255, 255, 255), thickness=cv.FILLED)
+
+    n_labels, piece_labels, _, _ = cv.connectedComponentsWithStats(filled)
+
+    masks = np.zeros((image.shape[0], image.shape[1], n_labels - 1), dtype=np.uint8)
+
+    for i in range(1, n_labels):
+        mask = (piece_labels == i)
+        masks[mask, i - 1] = 255
+
+    return masks
+
+
+def print_sol(solution, pieces):
+    # TODO: move to puzzle.py
+    for i, sol in enumerate(solution):
+        fig = plt.figure()
+
+        for j, cell in enumerate(sol.block.flatten()):
+            ax = fig.add_subplot(sol.block.shape[0], sol.block.shape[1], j + 1)
+            if cell is not None:
+                if cell.facet_piece_ind == 1:
+                    img = np.rot90(pieces[cell.piece_ind].cropped_image, -1)
+                elif cell.facet_piece_ind == 2:
+                    img = np.rot90(pieces[cell.piece_ind].cropped_image, 2)
+                elif cell.facet_piece_ind == 3:
+                    img = np.rot90(pieces[cell.piece_ind].cropped_image, 1)
+                else:
+                    img = pieces[cell.piece_ind].cropped_image
+                plt.imshow(img)
+                ax.axis('off')
+            else:
+                plt.imshow(np.array([0]))
+                ax.axis('off')
+        plt.savefig(f'plots/block{i}.png')
+        plt.close(fig)

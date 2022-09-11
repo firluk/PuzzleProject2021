@@ -22,7 +22,6 @@ import os
 import sys
 from warnings import filterwarnings
 
-import cv2
 import cv2 as cv
 import numpy as np
 import skimage
@@ -76,7 +75,7 @@ class Inference:
         # Detect objects
         if len(image.shape) > 2 and image.shape[2] == 4:
             # convert the image from RGBA2RGB
-            image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
+            image = cv.cvtColor(image, cv.COLOR_BGRA2BGR)
 
         r = self.model.detect([image], verbose=1)[0]
         masks = r['masks'].astype(np.uint8) * 255
@@ -96,7 +95,7 @@ class Inference:
         # Detect objects
         if len(image.shape) > 2 and image.shape[2] == 4:
             # convert the image from RGBA2RGB
-            image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
+            image = cv.cvtColor(image, cv.COLOR_BGRA2BGR)
 
         r = self.model.detect([image], verbose=1)[0]
         masks = r['masks'].astype(np.uint8) * 255
@@ -107,7 +106,7 @@ class Inference:
 
         for i in range(masks.shape[-1]):
             mask = masks[:, :, i]
-            masks[:, :, i] = cv2.medianBlur(mask, ksize_in_relation_to_width)
+            masks[:, :, i] = cv.medianBlur(mask, ksize_in_relation_to_width)
 
         return masks.astype(np.bool_) if as_bool else masks
 
@@ -148,7 +147,7 @@ class Inference:
         for i, val in enumerate(vals[vals > 1]):
             mask = masks[:, :, i]
             mask[markers == val] = 255
-            masks[:, :, i] = cv2.medianBlur(mask, ksize_in_relation_to_width)
+            masks[:, :, i] = cv.medianBlur(mask, ksize_in_relation_to_width)
             # plt.imshow(masks[:, :, i])
             # plt.show()
 

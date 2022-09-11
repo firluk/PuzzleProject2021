@@ -58,16 +58,18 @@ def evaluate_edge_compatibility(pieces):
                         if f2.type is Facet.Type.FLAT:
                             continue
                         iou[p1idx, p2idx, f1idx, f2idx] = Facet.iou(f1, f2)
-                        mgc[p1idx, p2idx, f1idx, f2idx] = Facet.mgc(f1, f2, length_for_comparison)
-                        cmp[p1idx, p2idx, f1idx, f2idx] = Facet.compatibility(f1, f2, length_for_comparison)
+                        # mgc[p1idx, p2idx, f1idx, f2idx] = Facet.mgc(f1, f2, length_for_comparison)
+                        # cmp[p1idx, p2idx, f1idx, f2idx] = Facet.compatibility(f1, f2, length_for_comparison)
                         # cmp[p1idx, p2idx, f1idx, f2idx] = compatibility_func()(mgc[p1idx, p2idx, f1idx, f2idx],
                         #                                                        iou[p1idx, p2idx, f1idx, f2idx])
     return cmp, iou, mgc, n_facets, n_pieces, n_side_pieces, n_middle_pieces
 
 
 def segment_to_masks_and_extract_pieces(weights_path, image_path, segmenting_method):
-    inference = Inference(weights_path)
-    masks = segmenting_method(inference, image_path)
+    # TODO:
+    # inference = Inference(weights_path)
+    # masks = segmenting_method(inference, image_path)
+    masks = segmenting_method(image_path)
     image = skimage.io.imread(image_path)
     scale = 1
     masks = masks_in_scale(masks, scale)

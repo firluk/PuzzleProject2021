@@ -111,17 +111,17 @@ class Facet:
         self.strip_image_2nd_level = strip_image(self.strip_coordinates_2nd_level)
 
         # self.scaled_down_facet_mask = image_in_scale(self.facet_mask.astype(np.uint8), MASK_DOWNSCALE).astype(np.uint8)
-        self.scaled_down_facet_mask = image_with_contour_in_scale(image_in_scale(self.facet_mask, ))
-        self.scaled_down_strip_coordinates = \
-            cv.findContours(self.scaled_down_facet_mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[0]
-        # self.scaled_down_mask = facet_mask_outer(cv.polylines(np.zeros_like(self.scaled_down_facet_mask),
-        #                                                       [self.scaled_down_strip_coordinates],
-        #                                                       False, 255, 1).astype(np.bool_))
-        scaled_down_piece = image_in_scale(self.piece.cropped_mask, MASK_DOWNSCALE)
-        self.scaled_down_strip_coordinates_2nd_level = \
-            calculate_strip_coordinate_2nd_level(self.scaled_down_facet_mask,
-                                                 scaled_down_piece,
-                                                 self.scaled_down_strip_coordinates)
+        # self.scaled_down_facet_mask = image_with_contour_in_scale(image_in_scale(self.facet_mask, ))
+        # self.scaled_down_strip_coordinates = \
+        #     cv.findContours(self.scaled_down_facet_mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[0]
+        # # self.scaled_down_mask = facet_mask_outer(cv.polylines(np.zeros_like(self.scaled_down_facet_mask),
+        # #                                                       [self.scaled_down_strip_coordinates],
+        # #                                                       False, 255, 1).astype(np.bool_))
+        # scaled_down_piece = image_in_scale(self.piece.cropped_mask, MASK_DOWNSCALE)
+        # self.scaled_down_strip_coordinates_2nd_level = \
+        #     calculate_strip_coordinate_2nd_level(self.scaled_down_facet_mask,
+        #                                          scaled_down_piece,
+        #                                          self.scaled_down_strip_coordinates)
 
         self.type = determine_type()
         self.next_facet: Facet = next_facet
