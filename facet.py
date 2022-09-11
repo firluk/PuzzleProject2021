@@ -3,6 +3,10 @@ from enum import Enum
 import cv2 as cv
 import numpy as np
 
+from utils import image_in_scale, image_with_contour_in_scale
+
+MASK_DOWNSCALE = 0.1
+
 
 class Facet:
     class Type(Enum):
@@ -74,15 +78,15 @@ class Facet:
             """
             return self.strip_coordinates[0], self.strip_coordinates[-1]
 
-        def calculate_strip_coordinate_2nd_level():
+        def calculate_strip_coordinate_2nd_level(facet_mask, piece_cropped_mask, strip_coordinates):
             """
             Calculates the 2nd layer contour under the facet
             :return: 2nd layer contour
             """
-            shape = (self.piece.cropped_mask.shape[0], self.piece.cropped_mask.shape[1])
+            shape = (piece_cropped_mask.shape[0], piece_cropped_mask.shape[1])
             # polyline thickness == 2 for the second level layer
-            strip_mask = cv.polylines(np.zeros(shape), [self.strip_coordinates], False, 255, 2)
-            strip_mask_2nd_level = ((self.piece.cropped_mask - self.facet_mask) * strip_mask).astype(np.uint8)
+            strip_mask = cv.polylines(np.zeros(shape), [strip_coordinates], False, 255, 2)
+            strip_mask_2nd_level = ((piece_cropped_mask - facet_mask) * strip_mask).astype(np.uint8)
             contour = cv.findContours(strip_mask_2nd_level, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)[0][0]
             head = strip_coordinates[0, :]
             tail = strip_coordinates[-1, :]
@@ -101,8 +105,24 @@ class Facet:
         self.facet_mask = facet_mask()  # binary mask
         self.facet_image = facet_image()  # pixel under mask
         self.strip_image = strip_image(self.strip_coordinates)
-        self.strip_coordinates_2nd_level = calculate_strip_coordinate_2nd_level()
+        self.strip_coordinates_2nd_level = calculate_strip_coordinate_2nd_level(self.facet_mask,
+                                                                                self.piece.cropped_mask,
+                                                                                self.strip_coordinates)
         self.strip_image_2nd_level = strip_image(self.strip_coordinates_2nd_level)
+
+        # self.scaled_down_facet_mask = image_in_scale(self.facet_mask.astype(np.uint8), MASK_DOWNSCALE).astype(np.uint8)
+        self.scaled_down_facet_mask = image_with_contour_in_scale(image_in_scale(self.facet_mask, ))
+        self.scaled_down_strip_coordinates = \
+            cv.findContours(self.scaled_down_facet_mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[0]
+        # self.scaled_down_mask = facet_mask_outer(cv.polylines(np.zeros_like(self.scaled_down_facet_mask),
+        #                                                       [self.scaled_down_strip_coordinates],
+        #                                                       False, 255, 1).astype(np.bool_))
+        scaled_down_piece = image_in_scale(self.piece.cropped_mask, MASK_DOWNSCALE)
+        self.scaled_down_strip_coordinates_2nd_level = \
+            calculate_strip_coordinate_2nd_level(self.scaled_down_facet_mask,
+                                                 scaled_down_piece,
+                                                 self.scaled_down_strip_coordinates)
+
         self.type = determine_type()
         self.next_facet: Facet = next_facet
         self.prev_facet: Facet = prev_facet
@@ -160,9 +180,9 @@ class Facet:
             return False
         elif \
                 (self.next_facet.type is Facet.Type.FLAT and other.prev_facet.type is not Facet.Type.FLAT) or \
-                (self.prev_facet.type is Facet.Type.FLAT and other.next_facet.type is not Facet.Type.FLAT) or \
-                (other.prev_facet.type is Facet.Type.FLAT and self.prev_facet.type is not Facet.Type.FLAT) or \
-                (other.prev_facet.type is Facet.Type.FLAT and self.next_facet.type is not Facet.Type.FLAT):
+                        (self.prev_facet.type is Facet.Type.FLAT and other.next_facet.type is not Facet.Type.FLAT) or \
+                        (other.prev_facet.type is Facet.Type.FLAT and self.prev_facet.type is not Facet.Type.FLAT) or \
+                        (other.prev_facet.type is Facet.Type.FLAT and self.next_facet.type is not Facet.Type.FLAT):
             return False
         else:
             return True

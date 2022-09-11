@@ -165,26 +165,6 @@ class Piece:
         self.piece_id = piece_id
 
 
-def image_in_scale(image, scale):
-    height, width = image.shape[:2]
-    scaled_height, scaled_width = int(height * scale), int(width * scale)
-    scaled_image = cv.resize(image, (scaled_width, scaled_height), interpolation=cv.INTER_LINEAR)
-    return scaled_image
-
-
-def masks_in_scale(masks, scale):
-    if scale == 1:
-        return masks
-    masks_num = masks.shape[-1]
-    height, width = masks.shape[:2]
-    scaled_height, scaled_width = int(height * scale), int(width * scale)
-    scaled_masks = np.zeros((scaled_height, scaled_width, masks_num))
-    for i in range(masks_num):
-        mask = masks[:, :, i]
-        scaled_masks[:, :, i] = cv.resize(mask, (scaled_width, scaled_height), interpolation=cv.INTER_NEAREST)
-    return scaled_masks.astype('uint8')
-
-
 def pieces_from_masks(masks, image):
     pieces = list()
     for i in range(masks.shape[-1]):

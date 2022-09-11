@@ -7,7 +7,8 @@ import numpy as np
 import skimage
 from PIL import ImageTk, Image
 
-from piece import masks_in_scale, image_in_scale, pieces_from_masks
+from piece import pieces_from_masks
+from utils import image_in_scale, masks_in_scale
 from puzzle import paint_facets_by_type, paint_facets_distinct
 from puzzle_piece_detector.inference_callable import Inference
 

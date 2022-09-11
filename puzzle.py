@@ -5,7 +5,8 @@ import skimage
 
 from facet import Facet
 from main import main
-from piece import Piece, pieces_from_masks, masks_in_scale, image_in_scale
+from piece import Piece, pieces_from_masks
+from utils import image_in_scale, masks_in_scale
 from puzzle_piece_detector.inference_callable import Inference
 
 DEFAULT_WEIGHTS_PATH = './weights/mask_rcnn_puzzle.h5 '
