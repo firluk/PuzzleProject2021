@@ -66,10 +66,11 @@ def evaluate_edge_compatibility(pieces):
 
 
 def segment_to_masks_and_extract_pieces(weights_path, image_path, segmenting_method):
-    # TODO:
-    # inference = Inference(weights_path)
-    # masks = segmenting_method(inference, image_path)
-    masks = segmenting_method(image_path)
+    if segmenting_method[0]:
+        inference = Inference(weights_path)
+        masks = segmenting_method[1](inference, image_path)
+    else:
+        masks = segmenting_method[1](image_path)
     image = skimage.io.imread(image_path)
     scale = 1
     masks = masks_in_scale(masks, scale)

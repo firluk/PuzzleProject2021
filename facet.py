@@ -60,14 +60,14 @@ class Facet:
             image[np.where(strip_mask)] = self.piece.cropped_image[np.where(strip_mask)]
             return image
 
-        def strip_image(coordinates):
+        def strip_image(coordinates, piece_cropped_image):
             """
             Returns image under facet mask as 1DxRGB np.array
             :return: Image under facet mask as 1DxRGB np.array
             """
             coordinates_0 = coordinates[:, 0, 0]
             coordinates_1 = coordinates[:, 0, 1]
-            image = self.piece.cropped_image
+            image = piece_cropped_image
             ret = image[coordinates_1, coordinates_0]
             ret = np.expand_dims(ret, axis=1)
             return ret
@@ -104,23 +104,24 @@ class Facet:
         self.corners = corners()  # identifiers
         self.facet_mask = facet_mask()  # binary mask
         self.facet_image = facet_image()  # pixel under mask
-        self.strip_image = strip_image(self.strip_coordinates)
+        self.strip_image = strip_image(self.strip_coordinates, self.piece.cropped_image)
         self.strip_coordinates_2nd_level = calculate_strip_coordinate_2nd_level(self.facet_mask,
                                                                                 self.piece.cropped_mask,
                                                                                 self.strip_coordinates)
-        self.strip_image_2nd_level = strip_image(self.strip_coordinates_2nd_level)
-
-        # self.scaled_down_facet_mask = image_in_scale(self.facet_mask.astype(np.uint8), MASK_DOWNSCALE).astype(np.uint8)
-        # self.scaled_down_facet_mask = image_with_contour_in_scale(image_in_scale(self.facet_mask, ))
-        # self.scaled_down_strip_coordinates = \
-        #     cv.findContours(self.scaled_down_facet_mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[0]
-        # # self.scaled_down_mask = facet_mask_outer(cv.polylines(np.zeros_like(self.scaled_down_facet_mask),
-        # #                                                       [self.scaled_down_strip_coordinates],
-        # #                                                       False, 255, 1).astype(np.bool_))
-        # scaled_down_piece = image_in_scale(self.piece.cropped_mask, MASK_DOWNSCALE)
+        self.strip_image_2nd_level = strip_image(self.strip_coordinates_2nd_level, self.piece.cropped_image)
+        # self.scaled_down_piece_cropped_image = image_in_scale(self.piece.cropped_image, MASK_DOWNSCALE).astype(np.uint8)
+        # self.scaled_down_piece_cropped_mask = image_in_scale(self.piece.cropped_mask, MASK_DOWNSCALE).astype(np.uint8)
+        # self.scaled_down_facet_mask = image_with_contour_in_scale(self.facet_mask.astype(np.uint8),
+        #                                                           self.strip_coordinates,
+        #                                                           MASK_DOWNSCALE).astype(np.uint8)
+        # self.scaled_down_strip_coordinates = cv.findContours(self.scaled_down_facet_mask,
+        #                                                      cv.RETR_EXTERNAL,
+        #                                                      cv.CHAIN_APPROX_NONE)[0][0]
+        # self.scaled_down_strip_coordinates_approx = cv.approxPolyDP(self.scaled_down_strip_coordinates, 0, False)
+        #
         # self.scaled_down_strip_coordinates_2nd_level = \
         #     calculate_strip_coordinate_2nd_level(self.scaled_down_facet_mask,
-        #                                          scaled_down_piece,
+        #                                          self.scaled_down_piece_cropped_mask,
         #                                          self.scaled_down_strip_coordinates)
 
         self.type = determine_type()

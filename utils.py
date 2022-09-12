@@ -89,7 +89,7 @@ def rotate_contour(cnt, angle):
 def image_in_scale(image, scale):
     height, width = image.shape[:2]
     scaled_height, scaled_width = int(height * scale), int(width * scale)
-    scaled_image = cv.resize(image, (scaled_width, scaled_height), interpolation=cv.INTER_LINEAR)
+    scaled_image = cv.resize(image.astype(np.uint8), (scaled_width, scaled_height), interpolation=cv.INTER_LINEAR)
     return scaled_image
 
 
@@ -111,15 +111,26 @@ def image_with_contour_in_scale(image, contour, scale):
     scaled_height, scaled_width = int(height * scale), int(width * scale)
     scaled_image = np.zeros((scaled_height, scaled_width))
     unique_scaled_down = np.squeeze(np.unique(np.round(contour * scale).astype(np.int_), axis=0))
-    scaled_image[unique_scaled_down[:, 1], unique_scaled_down[:, 0]] = 255
+
+    def coord_in_bounds(c, c_min, c_max):
+        return np.logical_and(c_min <= c, c < c_max)
+
+    x_filter = coord_in_bounds(unique_scaled_down[:, 1], 0, scaled_height)
+    y_filter = coord_in_bounds(unique_scaled_down[:, 0], 0, scaled_width)
+    xy_filter = np.logical_and(x_filter, y_filter)
+    # scaled_image[unique_scaled_down[:, 1], unique_scaled_down[:, 0]] = 255
+    scaled_image[unique_scaled_down[xy_filter, 1], unique_scaled_down[xy_filter, 0]] = 255
     return scaled_image
 
 
 def infer_using_saturation_and_hue(image_path):
     image = cv.imread(image_path)
-    scale_percent = 60  # percent of original size
-    width = int(image.shape[1] * scale_percent / 100)
-    height = int(image.shape[0] * scale_percent / 100)
+    # scale_percent = 60  # percent of original size
+    # scale_percent = 100  # percent of original size
+    # width = int(image.shape[1] * scale_percent / 100)
+    width = int(image.shape[1])
+    # height = int(image.shape[0] * scale_percent / 100)
+    height = int(image.shape[0])
     dim = (width, height)
 
     # resize image
@@ -135,6 +146,7 @@ def infer_using_saturation_and_hue(image_path):
     kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (2, 2))
     closing = cv.morphologyEx(mask, cv.MORPH_CLOSE, kernel, iterations=3)
     opening = cv.morphologyEx(closing, cv.MORPH_OPEN, kernel, iterations=3)
+    mask = opening
 
     ret, thresh = cv.threshold(mask, 127, 255, 0)
     contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
@@ -149,14 +161,23 @@ def infer_using_saturation_and_hue(image_path):
 
     for i in range(1, n_labels):
         mask = (piece_labels == i)
+        roll_dist = int(width * 0.0052)
+        mask2 = np.roll(mask, -roll_dist)
+        mask = np.logical_and(mask, mask2)
         masks[mask, i - 1] = 255
+
 
     return masks
 
 
 def print_sol(solution, pieces):
     # TODO: move to puzzle.py
-    blank = np.zeros((100,100))
+    wh_max = np.max([[piece.cropped_image.shape[0] for piece in pieces], [piece.cropped_image.shape[1] for piece in pieces]])
+    for piece in pieces:
+        plt.imshow(piece.cropped_image)
+        plt.show()
+        plt.close()
+    blank = np.zeros((wh_max, wh_max))
     for i, sol in enumerate(solution):
         fig = plt.figure()
 
