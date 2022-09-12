@@ -161,7 +161,11 @@ def infer_using_saturation_and_hue(image_path):
 
     for i in range(1, n_labels):
         mask = (piece_labels == i)
+        roll_dist = int(width * 0.0052)
+        mask2 = np.roll(mask, -roll_dist)
+        mask = np.logical_and(mask, mask2)
         masks[mask, i - 1] = 255
+
 
     return masks
 
