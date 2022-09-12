@@ -173,10 +173,6 @@ def infer_using_saturation_and_hue(image_path):
 def print_sol(solution, pieces):
     # TODO: move to puzzle.py
     wh_max = np.max([[piece.cropped_image.shape[0] for piece in pieces], [piece.cropped_image.shape[1] for piece in pieces]])
-    for piece in pieces:
-        plt.imshow(piece.cropped_image)
-        plt.show()
-        plt.close()
     blank = np.zeros((wh_max, wh_max))
     for i, sol in enumerate(solution):
         fig = plt.figure()
@@ -192,6 +188,7 @@ def print_sol(solution, pieces):
                     img = np.rot90(pieces[cell.piece_ind].cropped_image, 1)
                 else:
                     img = pieces[cell.piece_ind].cropped_image
+                plt.title(cell.piece_ind)
                 plt.imshow(img)
                 ax.axis('off')
             else:
