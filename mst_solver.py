@@ -123,7 +123,7 @@ class MST_Solver:
             blocks.append(bd.Block(node))  # create blocks of single piece each TODO: complete the code
 
         # Number of edges to be taken is equal to V-1
-        while e < self.V - 1:
+        while e < self.V - 1 and i < self.graph.shape[0]-1:
 
             # TODO: stop the loop if i == self.graph.shape[0]
             # Step 2: Pick the smallest edge and increment
@@ -154,6 +154,7 @@ class MST_Solver:
             i = i + 1
         # TODO: return matrix of (p,fp)
         self.print_solution(blocks[0].block)
+        return blocks
         # Else discard the edge
 
         # minimumCost = 0

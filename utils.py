@@ -156,6 +156,7 @@ def infer_using_saturation_and_hue(image_path):
 
 def print_sol(solution, pieces):
     # TODO: move to puzzle.py
+    blank = np.zeros((100,100))
     for i, sol in enumerate(solution):
         fig = plt.figure()
 
@@ -173,7 +174,7 @@ def print_sol(solution, pieces):
                 plt.imshow(img)
                 ax.axis('off')
             else:
-                plt.imshow(np.array([0]))
+                plt.imshow(blank)
                 ax.axis('off')
         plt.savefig(f'plots/block{i}.png')
         plt.close(fig)
