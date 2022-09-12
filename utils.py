@@ -89,7 +89,7 @@ def rotate_contour(cnt, angle):
 def image_in_scale(image, scale):
     height, width = image.shape[:2]
     scaled_height, scaled_width = int(height * scale), int(width * scale)
-    scaled_image = cv.resize(image, (scaled_width, scaled_height), interpolation=cv.INTER_LINEAR)
+    scaled_image = cv.resize(image.astype(np.uint8), (scaled_width, scaled_height), interpolation=cv.INTER_LINEAR)
     return scaled_image
 
 
@@ -111,7 +111,15 @@ def image_with_contour_in_scale(image, contour, scale):
     scaled_height, scaled_width = int(height * scale), int(width * scale)
     scaled_image = np.zeros((scaled_height, scaled_width))
     unique_scaled_down = np.squeeze(np.unique(np.round(contour * scale).astype(np.int_), axis=0))
-    scaled_image[unique_scaled_down[:, 1], unique_scaled_down[:, 0]] = 255
+
+    def coord_in_bounds(c, c_min, c_max):
+        return np.logical_and(c_min <= c, c < c_max)
+
+    x_filter = coord_in_bounds(unique_scaled_down[:, 1], 0, scaled_height)
+    y_filter = coord_in_bounds(unique_scaled_down[:, 0], 0, scaled_width)
+    xy_filter = np.logical_and(x_filter, y_filter)
+    # scaled_image[unique_scaled_down[:, 1], unique_scaled_down[:, 0]] = 255
+    scaled_image[unique_scaled_down[xy_filter, 1], unique_scaled_down[xy_filter, 0]] = 255
     return scaled_image
 
 
