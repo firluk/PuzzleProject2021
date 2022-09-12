@@ -125,9 +125,12 @@ def image_with_contour_in_scale(image, contour, scale):
 
 def infer_using_saturation_and_hue(image_path):
     image = cv.imread(image_path)
-    scale_percent = 60  # percent of original size
-    width = int(image.shape[1] * scale_percent / 100)
-    height = int(image.shape[0] * scale_percent / 100)
+    # scale_percent = 60  # percent of original size
+    # scale_percent = 100  # percent of original size
+    # width = int(image.shape[1] * scale_percent / 100)
+    width = int(image.shape[1])
+    # height = int(image.shape[0] * scale_percent / 100)
+    height = int(image.shape[0])
     dim = (width, height)
 
     # resize image
@@ -164,7 +167,12 @@ def infer_using_saturation_and_hue(image_path):
 
 def print_sol(solution, pieces):
     # TODO: move to puzzle.py
-    blank = np.zeros((100,100))
+    wh_max = np.max([[piece.cropped_image.shape[0] for piece in pieces], [piece.cropped_image.shape[1] for piece in pieces]])
+    for piece in pieces:
+        plt.imshow(piece.cropped_image)
+        plt.show()
+        plt.close()
+    blank = np.zeros((wh_max, wh_max))
     for i, sol in enumerate(solution):
         fig = plt.figure()
 
