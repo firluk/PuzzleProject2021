@@ -138,13 +138,7 @@ class MST_Solver:
             # and increment the index of result
             # for next edge
             if x != y:
-                print(parent, rank)
-                # return list of edges involved indirectly in the block or empty list
-                # e = e + 1
-                # self.union(parent, rank, x, y)
-                # result.append([p1, p2, fp1, fp2])
-                # validation_mat[p1][fp1] = 1
-                # validation_mat[p2][fp2] = 1
+                # print(parent, rank)
                 if self.union(parent, rank, x, y, i, blocks) is not False:
                     e = e + 1
                     # result.append([p1, p2, fp1, fp2])
@@ -153,7 +147,7 @@ class MST_Solver:
 
             i = i + 1
         # TODO: return matrix of (p,fp)
-        self.print_solution(blocks[0].block)
+        # self.print_solution(blocks[0].block)
         return blocks
         # Else discard the edge
 
