@@ -146,6 +146,7 @@ def infer_using_saturation_and_hue(image_path):
     kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (2, 2))
     closing = cv.morphologyEx(mask, cv.MORPH_CLOSE, kernel, iterations=3)
     opening = cv.morphologyEx(closing, cv.MORPH_OPEN, kernel, iterations=3)
+    mask = opening
 
     ret, thresh = cv.threshold(mask, 127, 255, 0)
     contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
