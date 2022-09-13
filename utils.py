@@ -202,5 +202,6 @@ def print_sol(solution, pieces, name):
             else:
                 plt.imshow(blank)
                 ax.axis('off')
+        plt.show()
         plt.savefig(f'plots/block_{name}_{i}.png')
         plt.close(fig)

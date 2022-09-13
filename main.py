@@ -1,4 +1,3 @@
-import utils
 from mst_solver import MST_Solver
 from puzzle import *
 from puzzle_piece_detector.inference_callable import Inference
