@@ -3,8 +3,6 @@ from enum import Enum
 import cv2 as cv
 import numpy as np
 
-from utils import image_in_scale, image_with_contour_in_scale
-
 MASK_DOWNSCALE = 0.1
 
 
@@ -182,7 +180,7 @@ class Facet:
         elif \
                 (self.next_facet.type is Facet.Type.FLAT and other.prev_facet.type is not Facet.Type.FLAT) or \
                         (self.prev_facet.type is Facet.Type.FLAT and other.next_facet.type is not Facet.Type.FLAT) or \
-                        (other.prev_facet.type is Facet.Type.FLAT and self.prev_facet.type is not Facet.Type.FLAT) or \
+                        (other.next_facet.type is Facet.Type.FLAT and self.prev_facet.type is not Facet.Type.FLAT) or \
                         (other.prev_facet.type is Facet.Type.FLAT and self.next_facet.type is not Facet.Type.FLAT):
             return False
         else:
@@ -223,7 +221,7 @@ class Facet:
         union_sum = self.union_sum(other)
         return intersection_sum / union_sum
 
-    def mgc(self, other, length_for_comparison) -> float:
+    def mgc(self, other, length_for_comparison=25) -> float:
         """
         Mahalanobis Gradient Compatibility
         :param other: Facet to calculate mahalanobis gradient compatibility with

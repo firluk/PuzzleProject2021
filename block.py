@@ -1,10 +1,11 @@
-import numpy as np
 import copy
+
+import numpy as np
 
 
 class cellInBlock:
 
-    def __init__(self, piece_ind = None, facet_piece_ind = None):
+    def __init__(self, piece_ind=None, facet_piece_ind=None):
 
         self.piece_ind = piece_ind
         self.facet_piece_ind = facet_piece_ind
@@ -75,11 +76,11 @@ def rotateBlockBeforeJoin(block, fp, fp_up, side):
     if side == 2:
         flip = 2
     if fp == fp_up:
-        block.rotateBlock(3-flip)
-    elif abs(fp - fp_up) == 1+flip:
+        block.rotateBlock(3 - flip)
+    elif abs(fp - fp_up) == 1 + flip:
         block.rotateBlock(2)
     elif abs(fp - fp_up) == 2:
-        block.rotateBlock(1+flip)
+        block.rotateBlock(1 + flip)
     # else:
     #     return copy.deepcopy(block)
     # return block
@@ -96,7 +97,6 @@ def validateMatch(score_mat, cell_lu, cell_rd, dir):
         rd_tmp.rotateCell(3)
     else:
         lu_tmp.rotateCell(2)
-    print(lu_tmp.piece_ind, rd_tmp.piece_ind, lu_tmp.facet_piece_ind, rd_tmp.facet_piece_ind)
     if rd_tmp.piece_ind >= lu_tmp.piece_ind:
         if score_mat[lu_tmp.piece_ind][rd_tmp.piece_ind][lu_tmp.facet_piece_ind][rd_tmp.facet_piece_ind] == 0:
             del lu_tmp, rd_tmp
@@ -147,40 +147,40 @@ def joinBlocks(block_a, block_b, p_a, fp_a, p_b, fp_b, score_mat):
     # <editor-fold desc="prep blocks for joining">
     diff = dist_left_p_b - dist_left_p_a
     if diff > 1:
-        block_a_rotated.block = np.hstack((np.empty((block_a_rotated.block.shape[0], abs(diff) - 1), cellInBlock), block_a_rotated.block))
+        block_a_rotated.block = np.hstack(
+            (np.empty((block_a_rotated.block.shape[0], abs(diff) - 1), cellInBlock), block_a_rotated.block))
     elif diff < 1:
-        block_b_rotated.block = np.hstack((np.empty((block_b_rotated.block.shape[0], abs(diff) + 1), cellInBlock), block_b_rotated.block))
+        block_b_rotated.block = np.hstack(
+            (np.empty((block_b_rotated.block.shape[0], abs(diff) + 1), cellInBlock), block_b_rotated.block))
 
     diff = dist_right_p_b - dist_right_p_a
     if diff > -1:
-        block_a_rotated.block = np.hstack((block_a_rotated.block, np.empty((block_a_rotated.block.shape[0], abs(diff) + 1), cellInBlock)))
+        block_a_rotated.block = np.hstack(
+            (block_a_rotated.block, np.empty((block_a_rotated.block.shape[0], abs(diff) + 1), cellInBlock)))
     elif diff < -1:
-        block_b_rotated.block = np.hstack((block_b_rotated.block, np.empty((block_b_rotated.block.shape[0], abs(diff) - 1), cellInBlock)))
+        block_b_rotated.block = np.hstack(
+            (block_b_rotated.block, np.empty((block_b_rotated.block.shape[0], abs(diff) - 1), cellInBlock)))
 
     diff = dist_upper_p_b - dist_upper_p_a
     if diff > 0:
-        block_a_rotated.block = np.vstack((np.empty((abs(diff), block_a_rotated.block.shape[1]), cellInBlock), block_a_rotated.block))
+        block_a_rotated.block = np.vstack(
+            (np.empty((abs(diff), block_a_rotated.block.shape[1]), cellInBlock), block_a_rotated.block))
     elif diff < 0:
-        block_b_rotated.block = np.vstack((np.empty((abs(diff), block_b_rotated.block.shape[1]), cellInBlock), block_b_rotated.block))
+        block_b_rotated.block = np.vstack(
+            (np.empty((abs(diff), block_b_rotated.block.shape[1]), cellInBlock), block_b_rotated.block))
 
     diff = dist_lower_p_b - dist_lower_p_a
     if diff > 0:
-        block_a_rotated.block = np.vstack((block_a_rotated.block, np.empty((abs(diff), block_a_rotated.block.shape[1]), cellInBlock)))
+        block_a_rotated.block = np.vstack(
+            (block_a_rotated.block, np.empty((abs(diff), block_a_rotated.block.shape[1]), cellInBlock)))
     elif diff < 0:
-        block_b_rotated.block = np.vstack((block_b_rotated.block, np.empty((abs(diff), block_b_rotated.block.shape[1]), cellInBlock)))
+        block_b_rotated.block = np.vstack(
+            (block_b_rotated.block, np.empty((abs(diff), block_b_rotated.block.shape[1]), cellInBlock)))
     # </editor-fold>
 
     joined_block = np.empty(block_a_rotated.block.shape, cellInBlock)
     # TODO: overwrite block property of the target block object with joined_block
     used_edge_stack = []
-
-    # for i, (cell_a, cell_b) in enumerate(zip(block_a_rotated.flatten(), block_b_rotated.flatten())):
-    #     if cell_a is None and cell_b is not None:
-    #         joined_block[i] = cell_b
-    #     elif cell_a is not None and cell_b is None:
-    #         joined_block[i] = cell_a
-    #     elif cell_a is not None and cell_b is not None:
-    #         return False
 
     for i, (row_a, row_b) in enumerate(zip(block_a_rotated.block, block_b_rotated.block)):
         for j, (cell_a, cell_b) in enumerate(zip(row_a, row_b)):
@@ -189,37 +189,34 @@ def joinBlocks(block_a, block_b, p_a, fp_a, p_b, fp_b, score_mat):
                 return False
             if j < block_a_rotated.block.shape[1] - 1:
                 if cell_a is not None and block_b_rotated.block[i][j + 1] is not None:
-                    print(cell_a.piece_ind, block_b_rotated.block[i][j + 1].piece_ind, cell_a.facet_piece_ind, block_b_rotated.block[i][j + 1].facet_piece_ind)
                     if validateMatch(score_mat, cell_a, block_b_rotated.block[i][j + 1], 0) is False:
                         return False
                     else:
                         used_edge_stack.append([cell_a.piece_ind, block_b_rotated.block[i][j + 1].piece_ind,
-                                               cell_a.facet_piece_ind, block_b_rotated.block[i][j + 1].facet_piece_ind])
+                                                cell_a.facet_piece_ind,
+                                                block_b_rotated.block[i][j + 1].facet_piece_ind])
                 elif cell_b is not None and block_a_rotated.block[i][j + 1] is not None:
-                    print(cell_b.piece_ind, cell_b.facet_piece_ind, block_a_rotated.block[i][j + 1].piece_ind,
-                          block_a_rotated.block[i][j + 1].facet_piece_ind)
                     if validateMatch(score_mat, cell_b, block_a_rotated.block[i][j + 1], 0) is False:
                         return False
                     else:
                         used_edge_stack.append([cell_b.piece_ind, block_a_rotated.block[i][j + 1].piece_ind,
-                                               cell_b.facet_piece_ind, block_a_rotated.block[i][j + 1].facet_piece_ind])
+                                                cell_b.facet_piece_ind,
+                                                block_a_rotated.block[i][j + 1].facet_piece_ind])
             if i < block_a_rotated.block.shape[0] - 1:
                 if cell_a is not None and block_b_rotated.block[i + 1][j] is not None:
-                    print(cell_a.piece_ind, cell_a.facet_piece_ind, block_b_rotated.block[i+1][j].piece_ind,
-                          block_b_rotated.block[i+1][j].facet_piece_ind)
                     if validateMatch(score_mat, cell_a, block_b_rotated.block[i + 1][j], 1) is False:
                         return False
                     else:
                         used_edge_stack.append([cell_a.piece_ind, block_b_rotated.block[i + 1][j].piece_ind,
-                                               cell_a.facet_piece_ind, block_b_rotated.block[i + 1][j].facet_piece_ind])
+                                                cell_a.facet_piece_ind,
+                                                block_b_rotated.block[i + 1][j].facet_piece_ind])
                 elif cell_b is not None and block_a_rotated.block[i + 1][j] is not None:
-                    print(cell_b.piece_ind, cell_b.facet_piece_ind, block_a_rotated.block[i + 1][j].piece_ind,
-                          block_a_rotated.block[i + 1][j].facet_piece_ind)
                     if validateMatch(score_mat, cell_b, block_a_rotated.block[i + 1][j], 1) is False:
                         return False
                     else:
                         used_edge_stack.append([cell_b.piece_ind, block_a_rotated.block[i + 1][j].piece_ind,
-                                               cell_b.facet_piece_ind, block_a_rotated.block[i + 1][j].facet_piece_ind])
+                                                cell_b.facet_piece_ind,
+                                                block_a_rotated.block[i + 1][j].facet_piece_ind])
             if cell_a is None and cell_b is not None:
                 joined_block[i][j] = cell_b
             elif cell_a is not None and cell_b is None:

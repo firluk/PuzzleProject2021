@@ -1,13 +1,11 @@
-import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
 import skimage
 
-from facet import Facet
-from main import main
+from facet import Facet, compatibility_func
 from piece import Piece, pieces_from_masks
-from utils import image_in_scale, masks_in_scale
 from puzzle_piece_detector.inference_callable import Inference
+from utils import image_in_scale, masks_in_scale
 
 DEFAULT_WEIGHTS_PATH = './weights/mask_rcnn_puzzle.h5 '
 
@@ -29,7 +27,7 @@ def parse_args():
     return args.weights, args.image
 
 
-def evaluate_edge_compatibility(pieces):
+def evaluate_edge_compatibility(pieces, comparison_method):
     n_side_pieces = n_middle_pieces = n_corner_pieces = 0
     for piece in pieces:
         if piece.type is Piece.Type.SIDE:
@@ -44,10 +42,10 @@ def evaluate_edge_compatibility(pieces):
     n_facets = 4
     # print_pieces(pieces)
     # print_facets(pieces)
-    iou = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
-    mgc = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
-    cmp = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
-    length_for_comparison = 25
+    arr = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
+    # iou = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
+    # mgc = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
+    # cmp = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
     for p1idx, p1 in enumerate(pieces):
         for p2idx, p2 in enumerate(pieces):
             if p1idx < p2idx:
@@ -57,12 +55,13 @@ def evaluate_edge_compatibility(pieces):
                     for f2idx, f2 in enumerate(p2.facets):
                         if f2.type is Facet.Type.FLAT:
                             continue
-                        iou[p1idx, p2idx, f1idx, f2idx] = Facet.iou(f1, f2)
+                        arr[p1idx, p2idx, f1idx, f2idx] = comparison_method(f1, f2)
+                        # iou[p1idx, p2idx, f1idx, f2idx] = Facet.iou(f1, f2)
                         # mgc[p1idx, p2idx, f1idx, f2idx] = Facet.mgc(f1, f2, length_for_comparison)
                         # cmp[p1idx, p2idx, f1idx, f2idx] = Facet.compatibility(f1, f2, length_for_comparison)
                         # cmp[p1idx, p2idx, f1idx, f2idx] = compatibility_func()(mgc[p1idx, p2idx, f1idx, f2idx],
                         #                                                        iou[p1idx, p2idx, f1idx, f2idx])
-    return cmp, iou, mgc, n_facets, n_pieces, n_side_pieces, n_middle_pieces
+    return arr, n_facets, n_pieces, n_side_pieces, n_middle_pieces
 
 
 def segment_to_masks_and_extract_pieces(weights_path, image_path, segmenting_method):
@@ -79,7 +78,7 @@ def segment_to_masks_and_extract_pieces(weights_path, image_path, segmenting_met
     return pieces, masks
 
 
-def print_pieces(pieces):
+def print_pieces(pieces, name):
     fig = plt.figure()
     for i in range(len(pieces)):
         factor = int(np.ceil(np.sqrt(len(pieces))))
@@ -87,11 +86,11 @@ def print_pieces(pieces):
         plt.imshow(pieces[i].cropped_image)
         ax.set_title(f'{i}')
         ax.axis('off')
-    plt.savefig(f'plots/pieces.png')
+    plt.savefig(f'plots/{name}.png')
     plt.close(fig)
 
 
-def print_facets(pieces):
+def print_facets(pieces, name):
     fig = plt.figure()
     for i in range(len(pieces)):
         factor = int(np.ceil(np.sqrt(len(pieces))))
@@ -105,7 +104,7 @@ def print_facets(pieces):
         ax.set_title(f'{i}')
         ax.axis('off')
 
-    plt.savefig(f'plots/facets.png')
+    plt.savefig(f'plots/{name}.png')
     plt.close(fig)
 
 
@@ -177,3 +176,19 @@ def paint_facets_distinct(masks, pieces):
         left_width, top_height = left + width, top + height
         masks_with_facets[top:top_height, left:left_width] = img
     return masks_with_facets
+
+
+def calc_cmp_from_iou_and_mgc(iou, mgc, n_facets, n_pieces, pieces):
+    cmp = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
+    for p1idx, p1 in enumerate(pieces):
+        for p2idx, p2 in enumerate(pieces):
+            if p1idx < p2idx:
+                for f1idx, f1 in enumerate(p1.facets):
+                    if f1.type is Facet.Type.FLAT:
+                        continue
+                    for f2idx, f2 in enumerate(p2.facets):
+                        if f2.type is Facet.Type.FLAT:
+                            continue
+                        cmp[p1idx, p2idx, f1idx, f2idx] = compatibility_func()(mgc[p1idx, p2idx, f1idx, f2idx],
+                                                                               iou[p1idx, p2idx, f1idx, f2idx])
+    return cmp

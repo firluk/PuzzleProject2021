@@ -112,6 +112,14 @@ def image_with_contour_in_scale(image, contour, scale):
     scaled_image = np.zeros((scaled_height, scaled_width))
     unique_scaled_down = np.squeeze(np.unique(np.round(contour * scale).astype(np.int_), axis=0))
 
+    def on_border(c, c_max):
+        mask = np.equal(c, c_max)
+        c[mask] = c_max - 1
+        return c
+
+    unique_scaled_down[:, 1] = on_border(unique_scaled_down[:, 1], scaled_height)
+    unique_scaled_down[:, 0] = on_border(unique_scaled_down[:, 0], scaled_height)
+
     def coord_in_bounds(c, c_min, c_max):
         return np.logical_and(c_min <= c, c < c_max)
 
@@ -170,7 +178,7 @@ def infer_using_saturation_and_hue(image_path):
     return masks
 
 
-def print_sol(solution, pieces):
+def print_sol(solution, pieces, name):
     # TODO: move to puzzle.py
     wh_max = np.max([[piece.cropped_image.shape[0] for piece in pieces], [piece.cropped_image.shape[1] for piece in pieces]])
     blank = np.zeros((wh_max, wh_max))
@@ -194,5 +202,5 @@ def print_sol(solution, pieces):
             else:
                 plt.imshow(blank)
                 ax.axis('off')
-        plt.savefig(f'plots/block{i}.png')
+        plt.savefig(f'plots/block_{name}_{i}.png')
         plt.close(fig)
