@@ -28,15 +28,14 @@ def main():
     # use either 1 or 2
 
     # 1. DL
-    # is_inference_type = True
-    # segmentation_method = (is_inference_type, Inference.infer_masks_and_blur)
+    is_inference_type = True
+    segmentation_method = (is_inference_type, Inference.infer_masks_and_blur)
 
     # 2. Pure openCV
-    import utils
-    is_inference_type = False
-    segmentation_method = (is_inference_type, utils.infer_using_saturation_and_hue)
+    # is_inference_type = False
+    # segmentation_method = (is_inference_type, utils.infer_using_saturation_and_hue)
 
-    weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale.png'
+    weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale.jpg'
     if segmentation_method[0]:
         inference = Inference(weights_path)
         masks = segmentation_method[1](inference, image_path)
