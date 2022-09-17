@@ -7,25 +7,6 @@ from piece import Piece, pieces_from_masks
 from puzzle_piece_detector.inference_callable import Inference
 from utils import image_in_scale, masks_in_scale
 
-DEFAULT_WEIGHTS_PATH = './weights/mask_rcnn_puzzle.h5 '
-
-
-def parse_args():
-    import argparse
-
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Run inference on Mask R-CNN to detect puzzle piece pieces.')
-    parser.add_argument('--weights', required=True,
-                        default=DEFAULT_WEIGHTS_PATH,
-                        metavar="/path/to/mask_rcnn_puzzle.h5",
-                        help="Path to weights .h5 file or 'coco'")
-    parser.add_argument('--image', required=True,
-                        metavar="path or URL to image",
-                        help='Image to apply the color splash effect on')
-
-    args = parser.parse_args()
-    return args.weights, args.image
-
 
 def evaluate_edge_compatibility(pieces, comparison_method):
     n_side_pieces = n_middle_pieces = n_corner_pieces = 0
@@ -40,12 +21,7 @@ def evaluate_edge_compatibility(pieces, comparison_method):
             raise
     n_pieces = len(pieces)
     n_facets = 4
-    # print_pieces(pieces)
-    # print_facets(pieces)
     arr = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
-    # iou = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
-    # mgc = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
-    # cmp = np.zeros((n_pieces, n_pieces, n_facets, n_facets))
     for p1idx, p1 in enumerate(pieces):
         for p2idx, p2 in enumerate(pieces):
             if p1idx < p2idx:
@@ -56,11 +32,6 @@ def evaluate_edge_compatibility(pieces, comparison_method):
                         if f2.type is Facet.Type.FLAT:
                             continue
                         arr[p1idx, p2idx, f1idx, f2idx] = comparison_method(f1, f2)
-                        # iou[p1idx, p2idx, f1idx, f2idx] = Facet.iou(f1, f2)
-                        # mgc[p1idx, p2idx, f1idx, f2idx] = Facet.mgc(f1, f2, length_for_comparison)
-                        # cmp[p1idx, p2idx, f1idx, f2idx] = Facet.compatibility(f1, f2, length_for_comparison)
-                        # cmp[p1idx, p2idx, f1idx, f2idx] = compatibility_func()(mgc[p1idx, p2idx, f1idx, f2idx],
-                        #                                                        iou[p1idx, p2idx, f1idx, f2idx])
     return arr, n_facets, n_pieces, n_side_pieces, n_middle_pieces
 
 

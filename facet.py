@@ -107,21 +107,6 @@ class Facet:
                                                                                 self.piece.cropped_mask,
                                                                                 self.strip_coordinates)
         self.strip_image_2nd_level = strip_image(self.strip_coordinates_2nd_level, self.piece.cropped_image)
-        # self.scaled_down_piece_cropped_image = image_in_scale(self.piece.cropped_image, MASK_DOWNSCALE).astype(np.uint8)
-        # self.scaled_down_piece_cropped_mask = image_in_scale(self.piece.cropped_mask, MASK_DOWNSCALE).astype(np.uint8)
-        # self.scaled_down_facet_mask = image_with_contour_in_scale(self.facet_mask.astype(np.uint8),
-        #                                                           self.strip_coordinates,
-        #                                                           MASK_DOWNSCALE).astype(np.uint8)
-        # self.scaled_down_strip_coordinates = cv.findContours(self.scaled_down_facet_mask,
-        #                                                      cv.RETR_EXTERNAL,
-        #                                                      cv.CHAIN_APPROX_NONE)[0][0]
-        # self.scaled_down_strip_coordinates_approx = cv.approxPolyDP(self.scaled_down_strip_coordinates, 0, False)
-        #
-        # self.scaled_down_strip_coordinates_2nd_level = \
-        #     calculate_strip_coordinate_2nd_level(self.scaled_down_facet_mask,
-        #                                          self.scaled_down_piece_cropped_mask,
-        #                                          self.scaled_down_strip_coordinates)
-
         self.type = determine_type()
         self.next_facet: Facet = next_facet
         self.prev_facet: Facet = prev_facet
@@ -140,9 +125,6 @@ class Facet:
         tab_xy = np.squeeze(cv.approxPolyDP(tab_coords_trim, 0, False))
         blank_xy = np.squeeze(cv.approxPolyDP(blank_coords_trim, 0, False))
 
-        # tab_xy = (np.squeeze(tab.strip_coordinates_approx))
-        # blank_xy = (np.squeeze(blank.strip_coordinates_approx))
-
         tab_xy_ht_diff = tab_xy[-1] - tab_xy[0]
         tab_length = np.sqrt(tab_xy_ht_diff[0] ** 2 + tab_xy_ht_diff[1] ** 2)
 
@@ -160,7 +142,6 @@ class Facet:
         aligned_tab_xy = aligned_tab_xy.astype(np.int32)
         aligned_tab_xy = shift_to_top(aligned_tab_xy)
         aligned_tab_facet_bitmap = cv.fillPoly(np.zeros(shape), [aligned_tab_xy], color)
-        # aligned_tab_facet_bitmap = cv.drawContours(np.zeros(shape), [aligned_tab_xy], -1, color, cv.FILLED)
 
         aligned_blank_xy = align_along_x(blank_xy)
         aligned_blank_xy[:, 1] = aligned_blank_xy[:, 1] * -1
@@ -169,7 +150,6 @@ class Facet:
         aligned_blank_xy = aligned_blank_xy.astype(np.int32)
         aligned_blank_xy = shift_to_top(aligned_blank_xy)
         aligned_blank_facet_bitmap = cv.fillPoly(np.zeros(shape), [aligned_blank_xy], color)
-        # aligned_blank_facet_bitmap = cv.drawContours(np.zeros(shape), [aligned_blank_xy], -1, color, cv.FILLED)
         return aligned_tab_facet_bitmap, aligned_blank_facet_bitmap
 
     def verify_facets_snappable(self, other) -> bool:

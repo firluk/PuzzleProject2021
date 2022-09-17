@@ -61,6 +61,9 @@ def pol2cart(rho, theta):
 
 
 def rotate_contour(cnt, angle):
+    """
+    Rotates contour by given angle
+    """
     M = cv.moments(cnt)
     cx = int(M['m10'] / M['m00'])
     cy = int(M['m01'] / M['m00'])
@@ -169,6 +172,8 @@ def infer_using_saturation_and_hue(image_path):
 
     for i in range(1, n_labels):
         mask = (piece_labels == i)
+        # TODO: find a computable way to compensate for scanning artifacts
+        # to compensate for the shadow produces by the process of the scanning, roll slightly to the right
         roll_dist = int(width * 0.0052)
         mask2 = np.roll(mask, -roll_dist)
         mask = np.logical_and(mask, mask2)
@@ -179,7 +184,6 @@ def infer_using_saturation_and_hue(image_path):
 
 
 def print_sol(solution, pieces, name):
-    # TODO: move to puzzle.py
     wh_max = np.max([[piece.cropped_image.shape[0] for piece in pieces], [piece.cropped_image.shape[1] for piece in pieces]])
     blank = np.zeros((wh_max, wh_max))
     for i, sol in enumerate(solution):
@@ -203,5 +207,5 @@ def print_sol(solution, pieces, name):
                 plt.imshow(blank)
                 ax.axis('off')
         plt.show()
-        plt.savefig(f'plots/block_{name}_{i}.png')
+        fig.savefig(f'plots/block_{name}_{i}.png')
         plt.close(fig)

@@ -36,8 +36,6 @@ class Application(Frame):
         self.menuBar = Menu(self)
         self.fileMenu = Menu(self.menuBar, tearoff=0)
         self.fileMenu.add_command(label="Image and Weights", command=self.pick_args)
-        # self.fileMenu.add_command(label="Image", command=self.pick_image_via_fd)
-        # self.fileMenu.add_command(label="Weights", command=self.pick_weights_via_fd)
         self.fileMenu.add_separator()
         self.fileMenu.add_command(label="Exit", command=self.quit)
         self.menuBar.add_cascade(label="File", menu=self.fileMenu)
@@ -115,7 +113,6 @@ class Application(Frame):
 
         masks_with_facets = paint_facets_distinct(masks, pieces)
 
-        # from matplotlib import pyplot as plt; plt.imshow(masks_with_facets); plt.show(); plt.close()
         self.update_photoImage_using_np_array(masks_with_facets)
         # rebinding button to
         self.button.config(command=self.show_facets_by_classification,
