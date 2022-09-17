@@ -3,12 +3,38 @@ from puzzle import *
 from puzzle_piece_detector.inference_callable import Inference
 from utils import print_sol, masks_in_scale, image_in_scale
 
+DEFAULT_WEIGHTS_PATH = './weights/mask_rcnn_puzzle.h5 '
+
+
+def parse_args():
+    # TODO adapt param parsing, so that there won't be need in hard-coding values
+    import argparse
+
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--weights', required=True,
+                        default=DEFAULT_WEIGHTS_PATH,
+                        metavar="/path/to/mask_rcnn_puzzle.h5",
+                        help="")
+    parser.add_argument('--image', required=True,
+                        metavar="path or URL to image",
+                        help="")
+
+    args = parser.parse_args()
+    return args.weights, args.image
+
 
 def main():
+    # use either 1 or 2
+
+    # 1. DL
     is_inference_type = True
     segmentation_method = (is_inference_type, Inference.infer_masks_and_blur)
+
+    # 2. Pure openCV
     # is_inference_type = False
     # segmentation_method = (is_inference_type, utils.infer_using_saturation_and_hue)
+
     weights_path, image_path = './weights/mask_rcnn_puzzle.h5', './plots/full_downscale.jpg'
     if segmentation_method[0]:
         inference = Inference(weights_path)
@@ -16,6 +42,7 @@ def main():
 
     else:
         masks = segmentation_method[1](image_path)
+
     image = skimage.io.imread(image_path)
     pieces = pieces_from_masks(masks, image)
     iou, n_facets, n_pieces, n_side_pieces, n_middle_pieces = evaluate_edge_compatibility(pieces, Facet.iou)
@@ -32,14 +59,15 @@ def main():
     edges_by_mgc = sort_and_filter(n_pieces, n_facets, 0, mgc, descending=False)
     edges_by_cmp = sort_and_filter(n_pieces, n_facets, 0, cmp, descending=False)
 
+    # ########### PRINT FUNCTIONS FOR DEBUG ONLY ########### #
     # print_pieces(pieces, "pieces")
     # print_pieces(sml_pieces, "sml_pieces")
     # print_facets(pieces, "facets")
     # print_facets(sml_pieces, "sml_facets")
-    #
     # print_figures_with_weights_to_folder(edges_by_iou, iou, pieces, 'iou')
     # print_figures_with_weights_to_folder(edges_by_mgc, mgc, sml_pieces, 'mgc')
     # print_figures_with_weights_to_folder(edges_by_cmp, cmp, pieces, 'cmp')
+    # ########### PRINT FUNCTIONS FOR DEBUG ONLY ########### #
 
     solution_iou = MST_Solver(piece_def, edges_by_iou, iou).solveMST()
     solution_mgc = MST_Solver(piece_def, edges_by_mgc, mgc).solveMST()
