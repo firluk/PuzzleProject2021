@@ -2,8 +2,8 @@
 
 
 ## Authors
-- Valentin Volovik, 326814449
-- Vadim Golotsvan, 314148099
+- Valentin Volovik
+- Vadim Golotsvan
 
 ## Running on Colab
 The Solver is best run on Colab runtime for the ease of setup and usability.
